@@ -1,4 +1,4 @@
-package com.chekurda.secret_pine.main_screen.presentation.views.user
+package com.chekurda.secret_pine.main_screen.presentation.views.user.list
 
 import android.content.Context
 import android.view.View

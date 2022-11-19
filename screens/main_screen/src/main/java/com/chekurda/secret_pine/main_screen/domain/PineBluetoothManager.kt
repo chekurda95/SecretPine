@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import com.chekurda.common.storeIn
+import com.chekurda.secret_pine.main_screen.data.Message
 import com.chekurda.secret_pine.main_screen.utils.SimpleReceiver
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -15,8 +16,10 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.SerialDisposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
-import java.lang.Exception
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.util.UUID
+import kotlin.Exception
 
 internal class PineBluetoothManager {
 
@@ -52,6 +55,8 @@ internal class PineBluetoothManager {
         add(deviceListDisposable)
         add(connectionDisposable)
     }
+
+    private val messageStoreList: MutableList<Message> = mutableListOf()
 
     @Volatile
     private var isConnected: Boolean = false
@@ -120,14 +125,32 @@ internal class PineBluetoothManager {
 
     private fun addSocketObserver(socket: BluetoothSocket) {
         val thread = object : Thread() {
+
             override fun run() {
                 super.run()
                 kotlin.runCatching {
+                    var allMessagesDelivered = false
+                    val inputStream = ObjectInputStream(socket.inputStream)
+                    val outputStream = ObjectOutputStream(socket.outputStream)
                     while (isConnected) {
-                        if (socket.inputStream.available() != 0) {
-                            // Читаем список сообщений
-                        } else {
-                            socket.outputStream.write(ByteArray(0))
+                        try {
+                            when {
+                                socket.inputStream.available() != 0 -> {
+                                    val obj = inputStream.readObject()
+                                    if (obj is Message) {
+                                        messageStoreList.add(obj)
+                                        outputStream.writeObject(obj)
+                                    }
+                                }
+                                !allMessagesDelivered -> {
+                                    outputStream.writeObject(messageStoreList)
+                                    allMessagesDelivered = true
+                                }
+                                else -> socket.outputStream.write(ByteArray(0))
+                            }
+                            Log.e("TAGTAG", "success write")
+                        } catch (ex: Exception) {
+                            Log.e("TAGTAG", "stream exception $ex")
                         }
                         sleep(1000)
                     }

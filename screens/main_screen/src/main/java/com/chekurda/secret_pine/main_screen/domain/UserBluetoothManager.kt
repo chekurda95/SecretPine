@@ -8,12 +8,16 @@ import android.content.Intent
 import android.os.Handler
 import android.util.Log
 import com.chekurda.common.storeIn
+import com.chekurda.secret_pine.main_screen.data.Message
+import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.SerialDisposable
 import io.reactivex.schedulers.Schedulers
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.lang.Exception
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -34,13 +38,16 @@ internal class UserBluetoothManager {
     private var isConnected: Boolean = false
     private var isDiscoverable: Boolean = false
 
-    private var messages: ByteArray = ByteArray(0)
+    private var outputStream: ObjectOutputStream? = null
+    private val messageList: MutableList<Message> = mutableListOf()
+
     private var originBluetoothName = ""
 
     private var context: Context? = null
     private var mainHandler: Handler? = null
 
     var listener: BluetoothManagerListener? = null
+    var onMessageListChanged: ((List<Message>) -> Unit)? = null
 
     fun init(context: Context, mainHandler: Handler) {
         this.context = context
@@ -48,6 +55,7 @@ internal class UserBluetoothManager {
     }
 
     fun startPineDetectService() {
+        if (isConnected) return
         if (!isDiscoverable) makeDiscoverable()
         openPineSearchingService()
         originBluetoothName = bluetoothAdapter.name
@@ -106,26 +114,54 @@ internal class UserBluetoothManager {
     }
 
     private fun startPineSocketObserver(pineSocket: BluetoothSocket) {
+        this.outputStream = ObjectOutputStream(pineSocket.outputStream)
+        val inputStream = ObjectInputStream(pineSocket.inputStream)
         val thread = object : Thread() {
+
             override fun run() {
                 super.run()
                 kotlin.runCatching {
                     isConnected = true
+                    val connectionCheckArray = ByteArray(0)
                     while (isConnected) {
                         if (pineSocket.inputStream.available() != 0) {
-                            pineSocket.inputStream.read()
+                            try {
+                                when (val obj = inputStream.readObject()) {
+                                     is List<*> -> (obj as? List<Message>)?.also { inputMessageList ->
+                                        mainHandler?.post {
+                                            messageList.clear()
+                                            val mappedList = inputMessageList.apply { map { it.isOutgoing = it.senderName == originBluetoothName }}
+                                            messageList.addAll(mappedList)
+                                            onMessageListChanged?.invoke(messageList)
+                                        }
+                                    }
+                                    is Message -> {
+                                        mainHandler?.post {
+                                            messageList.add(obj.apply { isOutgoing = senderName == originBluetoothName })
+                                            onMessageListChanged?.invoke(messageList)
+                                        }
+                                    }
+                                    else -> Unit
+                                }
+                            } catch (ex: Exception) {
+                                Log.e("TAGAG", "readListException = $ex")
+                            }
                         } else {
-                            pineSocket.outputStream.write(messages)
+                            pineSocket.outputStream.write(connectionCheckArray)
                         }
                         sleep(1000)
                     }
                 }.apply {
                     Log.e("TAGTAG", "onSocketDisconnected")
                     isConnected = false
+
                     pineSocket.close()
                     serverSocket?.close()
                     serverSocket = null
-                    mainHandler?.post { listener?.onConnectionCanceled(isError = false) }
+                    mainHandler?.post {
+                        this@UserBluetoothManager.outputStream = null
+                        listener?.onConnectionCanceled(isError = false)
+                    }
                     openPineSearchingService()
                 }
             }
@@ -156,6 +192,23 @@ internal class UserBluetoothManager {
         serverSocket?.close()
         serverSocket = null
         disposer.dispose()
+    }
+
+    fun sendMessage(text: String) {
+        val outputStream = outputStream ?: return
+        Completable.fromCallable {
+            val message = Message(
+                uuid = UUID.randomUUID(),
+                senderName = originBluetoothName,
+                text = text
+            )
+            outputStream.writeObject(message)
+        }.subscribeOn(Schedulers.io())
+            .subscribe(
+                { Log.e("TAGTAG", "onMessage sent") },
+                { Log.e("TAGTAG", "onMessage sent error $it") }
+            )
+            .storeIn(disposer)
     }
 }
 

@@ -1,14 +1,13 @@
 package com.chekurda.secret_pine.main_screen.presentation.views.user
 
 import android.content.Context
-import android.graphics.Canvas
 import android.util.AttributeSet
+import android.util.Log
 import android.view.ViewGroup
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.chekurda.common.half
-import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeExactlySpec
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeUnspecifiedSpec
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
@@ -17,6 +16,9 @@ import com.chekurda.design.custom_view_tools.utils.layout
 import com.chekurda.secret_pine.main_screen.data.Message
 import com.chekurda.secret_pine.main_screen.presentation.views.ConnectionStateView
 import com.chekurda.secret_pine.main_screen.presentation.views.user.list.MessageListAdapter
+import com.chekurda.secret_pine.main_screen.presentation.views.user.panel.MessagePanel
+import com.chekurda.secret_pine.main_screen.presentation.views.user.panel.MessagePanelController
+import org.apache.commons.lang3.StringUtils
 
 internal class UserScreenView @JvmOverloads constructor(
     context: Context,
@@ -40,6 +42,7 @@ internal class UserScreenView @JvmOverloads constructor(
         state = ConnectionStateView.State.SEARCH_PINE
         updatePadding(left = dp(40), right = dp(40), top = dp(40), bottom = dp(40))
     }
+    private lateinit var controller: MessagePanelController
 
     var state: ConnectionStateView.State
         get() = connectionStateView.state
@@ -47,14 +50,31 @@ internal class UserScreenView @JvmOverloads constructor(
             connectionStateView.state = value
         }
 
-    fun setMessageList(messages: List<Message>) {
-        adapter.setDataList(messages)
+    fun attachController(controller: MessagePanelController) {
+        this.controller = controller
+    }
+
+    fun updateConnectionState(isConnected: Boolean) {
+        messagePanel.isEnabled = isConnected
+        state = if (isConnected) ConnectionStateView.State.CONNECTED else ConnectionStateView.State.SEARCH_PINE
+    }
+
+    fun updateMessageList(messageList: List<Message>) {
+        adapter.setDataList(messageList)
+        Log.e("TAGTAG", "updateMessageList $messageList")
     }
 
     init {
         addView(messageListView)
         addView(connectionStateView)
         addView(messagePanel)
+
+        messagePanel.sendButton.setOnClickListener {
+            val text = messagePanel.inputView.text?.toString()
+            if (text.isNullOrBlank()) return@setOnClickListener
+            messagePanel.inputView.setText(StringUtils.EMPTY)
+            controller.sendMessage(text)
+        }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

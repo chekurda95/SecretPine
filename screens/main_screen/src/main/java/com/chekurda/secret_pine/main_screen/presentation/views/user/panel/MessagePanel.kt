@@ -1,4 +1,4 @@
-package com.chekurda.secret_pine.main_screen.presentation.views.user
+package com.chekurda.secret_pine.main_screen.presentation.views.user.panel
 
 import android.content.Context
 import android.util.AttributeSet
@@ -23,14 +23,14 @@ internal class MessagePanel @JvmOverloads constructor(
     private val sendButtonSize = dp(40)
     private val sendButtonHorizontalSpacing = dp(12)
 
-    private val inputView = AppCompatEditText(context).apply {
+    val inputView = AppCompatEditText(context).apply {
         background = ContextCompat.getDrawable(context, R.drawable.input_background)
         maxLines = 15
         minHeight = sendButtonSize
         hint = "Enter message"
         updatePadding(left = dp(15), right = dp(15))
     }
-    private val sendButton = AppCompatButton(context).apply {
+    val sendButton = AppCompatButton(context).apply {
         background = ContextCompat.getDrawable(context, R.drawable.send_ripple_button_background)
         outlineProvider = ViewOutlineProvider.BACKGROUND
         clipToOutline = true

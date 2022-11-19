@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import com.chekurda.common.base_fragment.BasePresenterFragment
 import com.chekurda.secret_pine.main_screen.R
 import com.chekurda.secret_pine.main_screen.contact.MainScreenFragmentFactory
+import com.chekurda.secret_pine.main_screen.data.Message
 import com.chekurda.secret_pine.main_screen.presentation.views.ConnectionStateView
 import com.chekurda.secret_pine.main_screen.presentation.views.pine.PineScreenView
 import com.chekurda.secret_pine.main_screen.presentation.views.user.UserScreenView
@@ -80,30 +81,28 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
             removeAllViews()
             userModeButton = null
             pineModeButton = null
-            userScreenView = UserScreenView(context)
+            userScreenView = UserScreenView(context).apply {
+                attachController(presenter)
+            }
             addView(userScreenView, MATCH_PARENT, MATCH_PARENT)
             presenter.onUserModeSelected()
         }
     }
 
     override fun updateSearchState(isRunning: Boolean) {
-        if (isRunning) {
-            pineScreenView?.apply {
-                state = ConnectionStateView.State.SEARCH_PINE_LOVERS
-            } ?: userScreenView?.apply {
-                state = ConnectionStateView.State.SEARCH_PINE
-            }
+        pineScreenView?.apply {
+            if (isRunning) state = ConnectionStateView.State.SEARCH_PINE_LOVERS
         }
     }
 
     override fun updateConnectionState(isConnected: Boolean) {
-        if (isConnected) {
-            pineScreenView?.apply {
-                state = ConnectionStateView.State.CONNECTED
-            } ?: userScreenView?.apply {
-                state = ConnectionStateView.State.CONNECTED
-            }
-        }
+        pineScreenView?.apply {
+            if (isConnected) state = ConnectionStateView.State.CONNECTED
+        } ?: userScreenView?.updateConnectionState(isConnected)
+    }
+
+    override fun updateMessageList(messageList: List<Message>) {
+        userScreenView?.updateMessageList(messageList)
     }
 
     override fun onStart() {

@@ -3,6 +3,8 @@ package com.chekurda.secret_pine.main_screen.presentation
 import android.app.Activity
 import android.os.Handler
 import com.chekurda.common.base_fragment.BasePresenter
+import com.chekurda.secret_pine.main_screen.data.Message
+import com.chekurda.secret_pine.main_screen.presentation.views.user.panel.MessagePanelController
 
 /**
  * Контракт главного экрана.
@@ -27,12 +29,14 @@ internal interface MainScreenContract {
         fun provideActivity(): Activity
 
         fun provideHandler(): Handler
+
+        fun updateMessageList(messageList: List<Message>)
     }
 
     /**
      * Контракт презентера главного экрана.
      */
-    interface Presenter : BasePresenter<View> {
+    interface Presenter : BasePresenter<View>, MessagePanelController {
 
         fun onPineModeSelected()
 

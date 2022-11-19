@@ -3,7 +3,6 @@ package com.chekurda.secret_pine.main_screen.presentation.views.user.list
 import android.content.Context
 import androidx.recyclerview.widget.RecyclerView
 import com.chekurda.secret_pine.main_screen.data.Message
-import com.chekurda.secret_pine.main_screen.presentation.views.user.MessageItemView
 
 /**
  * ViewHolder списка сообщений.

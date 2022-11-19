@@ -37,6 +37,9 @@ internal class MainScreenPresenterImpl : BasePresenterImpl<MainScreenContract.Vi
         userManager = UserBluetoothManager().apply {
             init(view!!.provideActivity().applicationContext, view!!.provideHandler())
             listener = this@MainScreenPresenterImpl
+            onMessageListChanged = { messageList ->
+                view?.updateMessageList(messageList)
+            }
             startPineDetectService()
         }
     }
@@ -69,6 +72,10 @@ internal class MainScreenPresenterImpl : BasePresenterImpl<MainScreenContract.Vi
     override fun onConnectionCanceled(isError: Boolean) {
         isConnected = false
         view?.updateConnectionState(isConnected = false)
+    }
+
+    override fun sendMessage(text: String) {
+        userManager?.sendMessage(text)
     }
 
     override fun onDestroy() {
