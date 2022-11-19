@@ -5,7 +5,7 @@
         <item name="colorPrimaryDark">@color/main_background_color</item>
         <item name="colorAccent">@android:color/white</item>
         <item name="android:windowBackground">?colorPrimary</item>
-        <item name="android:statusBarColor">?colorPrimary</item>
+        <item name="android:statusBarColor">@color/sky_color</item>
         <item name="android:navigationBarColor">?colorPrimary</item>
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
     </style>

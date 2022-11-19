@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.ViewGroup.LayoutParams.*
 import android.widget.FrameLayout
+import androidx.core.view.updatePadding
 import com.chekurda.design.custom_view_tools.utils.dp
 
 internal class PineScreenView @JvmOverloads constructor(
@@ -12,7 +13,9 @@ internal class PineScreenView @JvmOverloads constructor(
     attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs) {
 
-    private val stateView = PineConnectionStateView(context)
+    private val stateView = PineConnectionStateView(context).apply {
+        updatePadding(top = dp(40), bottom = dp(40))
+    }
 
     var state: PineConnectionStateView.State
         get() = stateView.state

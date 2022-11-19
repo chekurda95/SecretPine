@@ -93,9 +93,8 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
                 state = PineConnectionStateView.State.SEARCH_PINE_LOVERS
             }
         } ?: userScreenView?.apply {
-
+            Toast.makeText(context, "updateSearchState = $isRunning", Toast.LENGTH_SHORT).show()
         }
-        Toast.makeText(context, "updateSearchState = $isRunning", Toast.LENGTH_SHORT).show()
     }
 
     override fun updateConnectionState(isConnected: Boolean) {
@@ -104,9 +103,8 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
                 state = PineConnectionStateView.State.CONNECTED
             }
         } ?: userScreenView?.apply {
-
+            Toast.makeText(context, "updateConnectionState = $isConnected", Toast.LENGTH_SHORT).show()
         }
-        Toast.makeText(context, "updateConnectionState = $isConnected", Toast.LENGTH_SHORT).show()
     }
 
     override fun onStart() {

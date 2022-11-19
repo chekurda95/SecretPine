@@ -24,9 +24,9 @@ internal class PineConnectionStateView @JvmOverloads constructor(
 ) : View(context, attrs) {
 
     enum class State(val text: String, @DrawableRes val backgroundRes: Int) {
-        PREPARING("Pine preparing".uppercase(), R.drawable.connect_ripple_button_background),
-        CONNECTED("Connected".uppercase(), R.drawable.connect_ripple_button_background),
-        SEARCH_PINE_LOVERS("Pine lovers searching".uppercase(), R.drawable.connect_ripple_button_background)
+        PREPARING("Pine preparing".uppercase(), R.drawable.pine_search_state_background),
+        SEARCH_PINE_LOVERS("Pine lovers searching".uppercase(), R.drawable.pine_search_state_background),
+        CONNECTED("Connected".uppercase(), R.drawable.pine_connected_background)
     }
 
     private val textLayout = TextLayout {
@@ -64,16 +64,15 @@ internal class PineConnectionStateView @JvmOverloads constructor(
         dotsDrawable.setVisible(state != State.CONNECTED, false)
         setMeasuredDimension(
             MeasureSpecUtils.measureDirection(widthMeasureSpec) { suggestedMinimumWidth },
-            MeasureSpecUtils.measureDirection(widthMeasureSpec) { suggestedMinimumHeight },
+            MeasureSpecUtils.measureDirection(heightMeasureSpec) { suggestedMinimumHeight },
         )
     }
 
     override fun getSuggestedMinimumWidth(): Int =
-        super.getSuggestedMinimumWidth()
-            .coerceAtLeast(textLayout.width + paddingStart + paddingEnd + if (dotsDrawable.isVisible) dotsSpacing + dotsDrawable.intrinsicWidth else 0)
+        textLayout.width + paddingStart + paddingEnd + if (dotsDrawable.isVisible) dotsSpacing + dotsDrawable.intrinsicWidth else 0
 
     override fun getSuggestedMinimumHeight(): Int =
-        super.getSuggestedMinimumHeight().coerceAtLeast(textLayout.height + paddingTop + paddingBottom)
+        textLayout.height + paddingTop + paddingBottom
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         if (dotsDrawable.isVisible) {

@@ -81,12 +81,11 @@ internal class UserBluetoothManager {
         Single.fromCallable {
             val serverSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(PINE_SERVICE_NAME, secureUUID)
             this.serverSocket = serverSocket
-            val socket: BluetoothSocket?
+            var socket: BluetoothSocket? = null
             try {
                 socket = serverSocket.accept()
             } catch (ex: Exception) {
                 serverSocket?.close()
-                throw Exception()
             }
             socket!!
         }.subscribeOn(Schedulers.io())
