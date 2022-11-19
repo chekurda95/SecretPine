@@ -14,6 +14,7 @@
         <activity
             android:name="com.chekurda.secret_pine.presentation.MainActivity"
             android:screenOrientation="locked"
+            android:windowSoftInputMode="adjustResize"
             android:exported="true">
 
             <intent-filter>

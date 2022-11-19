@@ -11,12 +11,11 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.Button
 import android.widget.Toast
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.chekurda.common.base_fragment.BasePresenterFragment
 import com.chekurda.secret_pine.main_screen.R
 import com.chekurda.secret_pine.main_screen.contact.MainScreenFragmentFactory
-import com.chekurda.secret_pine.main_screen.presentation.views.pine.PineConnectionStateView
+import com.chekurda.secret_pine.main_screen.presentation.views.ConnectionStateView
 import com.chekurda.secret_pine.main_screen.presentation.views.pine.PineScreenView
 import com.chekurda.secret_pine.main_screen.presentation.views.user.UserScreenView
 import com.chekurda.secret_pine.main_screen.utils.PermissionsHelper
@@ -88,22 +87,22 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     }
 
     override fun updateSearchState(isRunning: Boolean) {
-        pineScreenView?.apply {
-            if (isRunning) {
-                state = PineConnectionStateView.State.SEARCH_PINE_LOVERS
+        if (isRunning) {
+            pineScreenView?.apply {
+                state = ConnectionStateView.State.SEARCH_PINE_LOVERS
+            } ?: userScreenView?.apply {
+                state = ConnectionStateView.State.SEARCH_PINE
             }
-        } ?: userScreenView?.apply {
-            Toast.makeText(context, "updateSearchState = $isRunning", Toast.LENGTH_SHORT).show()
         }
     }
 
     override fun updateConnectionState(isConnected: Boolean) {
-        pineScreenView?.apply {
-            if (isConnected) {
-                state = PineConnectionStateView.State.CONNECTED
+        if (isConnected) {
+            pineScreenView?.apply {
+                state = ConnectionStateView.State.CONNECTED
+            } ?: userScreenView?.apply {
+                state = ConnectionStateView.State.CONNECTED
             }
-        } ?: userScreenView?.apply {
-            Toast.makeText(context, "updateConnectionState = $isConnected", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -119,8 +118,11 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     override fun onDestroyView() {
         super.onDestroyView()
+        mainScreenView = null
         pineModeButton = null
         userModeButton = null
+        pineScreenView = null
+        userScreenView = null
     }
 
     override fun onDetach() {

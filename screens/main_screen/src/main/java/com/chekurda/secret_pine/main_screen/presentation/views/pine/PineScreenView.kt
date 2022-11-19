@@ -7,17 +7,19 @@ import android.view.ViewGroup.LayoutParams.*
 import android.widget.FrameLayout
 import androidx.core.view.updatePadding
 import com.chekurda.design.custom_view_tools.utils.dp
+import com.chekurda.secret_pine.main_screen.presentation.views.ConnectionStateView
 
 internal class PineScreenView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs) {
 
-    private val stateView = PineConnectionStateView(context).apply {
+    private val stateView = ConnectionStateView(context).apply {
+        state = ConnectionStateView.State.PREPARING
         updatePadding(top = dp(40), bottom = dp(40))
     }
 
-    var state: PineConnectionStateView.State
+    var state: ConnectionStateView.State
         get() = stateView.state
         set(value) {
             stateView.state = value

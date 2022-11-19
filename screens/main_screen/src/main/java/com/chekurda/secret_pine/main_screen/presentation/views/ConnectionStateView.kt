@@ -1,4 +1,4 @@
-package com.chekurda.secret_pine.main_screen.presentation.views.pine
+package com.chekurda.secret_pine.main_screen.presentation.views
 
 import android.content.Context
 import android.graphics.Canvas
@@ -13,20 +13,22 @@ import androidx.core.content.ContextCompat
 import com.chekurda.common.half
 import com.chekurda.design.custom_view_tools.TextLayout
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils
+import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
 import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.design.custom_view_tools.utils.safeRequestLayout
 import com.chekurda.secret_pine.main_screen.R
 import com.chekurda.secret_pine.main_screen.presentation.views.drawables.AnimatedDotsDrawable
 
-internal class PineConnectionStateView @JvmOverloads constructor(
+internal class ConnectionStateView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : View(context, attrs) {
 
     enum class State(val text: String, @DrawableRes val backgroundRes: Int) {
-        PREPARING("Pine preparing".uppercase(), R.drawable.pine_search_state_background),
-        SEARCH_PINE_LOVERS("Pine lovers searching".uppercase(), R.drawable.pine_search_state_background),
-        CONNECTED("Connected".uppercase(), R.drawable.pine_connected_background)
+        PREPARING("Pine preparing".uppercase(), R.drawable.search_state_background),
+        SEARCH_PINE_LOVERS("Pine lovers searching".uppercase(), R.drawable.search_state_background),
+        SEARCH_PINE("Pine searching".uppercase(), R.drawable.search_state_background),
+        CONNECTED("Connected".uppercase(), R.drawable.connected_state_background)
     }
 
     private val textLayout = TextLayout {
@@ -38,7 +40,7 @@ internal class PineConnectionStateView @JvmOverloads constructor(
     }
 
     private val dotsDrawable = AnimatedDotsDrawable().apply {
-        callback = this@PineConnectionStateView
+        callback = this@ConnectionStateView
         params = AnimatedDotsDrawable.DotsParams(size = dp(3))
         textColor = Color.WHITE
     }
@@ -55,7 +57,6 @@ internal class PineConnectionStateView @JvmOverloads constructor(
         }
 
     init {
-        state = State.PREPARING
         outlineProvider = ViewOutlineProvider.BACKGROUND
         clipToOutline = true
     }
@@ -63,8 +64,8 @@ internal class PineConnectionStateView @JvmOverloads constructor(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         dotsDrawable.setVisible(state != State.CONNECTED, false)
         setMeasuredDimension(
-            MeasureSpecUtils.measureDirection(widthMeasureSpec) { suggestedMinimumWidth },
-            MeasureSpecUtils.measureDirection(heightMeasureSpec) { suggestedMinimumHeight },
+            measureDirection(widthMeasureSpec) { suggestedMinimumWidth },
+            measureDirection(heightMeasureSpec) { suggestedMinimumHeight },
         )
     }
 
