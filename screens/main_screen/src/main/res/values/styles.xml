@@ -3,7 +3,7 @@
 
     <style name="ModeButtonStyle">
         <item name="android:textSize">18dp</item>
-        <item name="android:textColor">@android:color/black</item>
+        <item name="android:textColor">@android:color/white</item>
         <item name="android:padding">25dp</item>
     </style>
     

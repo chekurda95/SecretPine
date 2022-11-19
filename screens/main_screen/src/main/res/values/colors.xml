@@ -2,6 +2,7 @@
 <resources>
 
     <item name="main_background_color" type="color">#183855</item>
+    <item name="message_panel_background_color" type="color">#0F2335</item>
     <item name="sky_color" type="color">#377AB5</item>
     <item name="pine_mode_color" type="color">#32B837</item>
     <item name="pine_lover_mode_color" type="color">#FFA000</item>

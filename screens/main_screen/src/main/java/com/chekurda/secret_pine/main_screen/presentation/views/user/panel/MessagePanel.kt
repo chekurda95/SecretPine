@@ -20,12 +20,12 @@ internal class MessagePanel @JvmOverloads constructor(
     attrs: AttributeSet? = null
 ) : ViewGroup(context, attrs) {
 
-    private val sendButtonSize = dp(40)
-    private val sendButtonHorizontalSpacing = dp(12)
+    private val sendButtonSize = dp(45)
+    private val sendButtonHorizontalSpacing = dp(6)
 
     val inputView = AppCompatEditText(context).apply {
         background = ContextCompat.getDrawable(context, R.drawable.input_background)
-        maxLines = 15
+        maxLines = 5
         minHeight = sendButtonSize
         hint = "Enter message"
         updatePadding(left = dp(15), right = dp(15))
@@ -39,7 +39,8 @@ internal class MessagePanel @JvmOverloads constructor(
     init {
         addView(inputView)
         addView(sendButton)
-        updatePadding(left = dp(15), right = dp(15), top = dp(15), bottom = dp(15))
+        setBackgroundColor(ContextCompat.getColor(context, R.color.message_panel_background_color))
+        updatePadding(left = dp(15), right = dp(15), top = dp(5), bottom = dp(5))
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

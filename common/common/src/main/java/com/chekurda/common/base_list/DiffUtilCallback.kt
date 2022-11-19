@@ -14,7 +14,7 @@ private class DiffUtilCallback<T : ComparableItem<T>>(
         old[oldItemPosition].areItemsTheSame(new[newItemPosition])
 
     override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-        old[oldItemPosition].areItemsTheSame(new[newItemPosition])
+        old[oldItemPosition].areContentsTheSame(new[newItemPosition])
 
     override fun getOldListSize(): Int = old.size
     override fun getNewListSize(): Int = new.size

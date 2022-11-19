@@ -7,9 +7,10 @@ import java.util.UUID
 internal data class Message(
     val uuid: UUID,
     val senderName: String,
-    val text: String,
-    var isOutgoing: Boolean? = null
+    val text: String
 ) : ComparableItem<Message>, Serializable {
+
+    var isOutcome: Boolean? = null
 
     override fun areItemsTheSame(anotherItem: Message): Boolean =
         uuid == anotherItem.uuid

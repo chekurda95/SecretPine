@@ -58,8 +58,7 @@ internal class UserBluetoothManager {
         if (isConnected) return
         if (!isDiscoverable) makeDiscoverable()
         openPineSearchingService()
-        originBluetoothName = bluetoothAdapter.name
-        bluetoothAdapter.name = "%s %s".format(PINE_LOVER_DEVICE_NAME, bluetoothAdapter.name)
+        prepareDeviceName()
     }
 
     private fun makeDiscoverable() {
@@ -130,14 +129,14 @@ internal class UserBluetoothManager {
                                      is List<*> -> (obj as? List<Message>)?.also { inputMessageList ->
                                         mainHandler?.post {
                                             messageList.clear()
-                                            val mappedList = inputMessageList.apply { map { it.isOutgoing = it.senderName == originBluetoothName }}
+                                            val mappedList = inputMessageList.apply { map { it.isOutcome = it.senderName == originBluetoothName }}
                                             messageList.addAll(mappedList)
                                             onMessageListChanged?.invoke(messageList)
                                         }
                                     }
                                     is Message -> {
                                         mainHandler?.post {
-                                            messageList.add(obj.apply { isOutgoing = senderName == originBluetoothName })
+                                            messageList.add(obj.apply { isOutcome = senderName == originBluetoothName })
                                             onMessageListChanged?.invoke(messageList)
                                         }
                                     }
@@ -209,6 +208,13 @@ internal class UserBluetoothManager {
                 { Log.e("TAGTAG", "onMessage sent error $it") }
             )
             .storeIn(disposer)
+    }
+
+    private fun prepareDeviceName() {
+        originBluetoothName = bluetoothAdapter.name
+        if (!originBluetoothName.contains(PINE_LOVER_DEVICE_NAME)) {
+            bluetoothAdapter.name = "%s %s".format(PINE_LOVER_DEVICE_NAME, bluetoothAdapter.name)
+        }
     }
 }
 

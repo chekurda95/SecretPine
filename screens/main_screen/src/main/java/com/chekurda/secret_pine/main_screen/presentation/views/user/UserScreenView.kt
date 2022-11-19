@@ -27,7 +27,9 @@ internal class UserScreenView @JvmOverloads constructor(
 
     private val adapter = MessageListAdapter()
 
-    private val messagePanel = MessagePanel(context)
+    private val messagePanel = MessagePanel(context).apply {
+        isEnabled = false
+    }
     private val messageListView = RecyclerView(context).apply {
         adapter = this@UserScreenView.adapter
         layoutManager = object : LinearLayoutManager(context) {
@@ -38,9 +40,10 @@ internal class UserScreenView @JvmOverloads constructor(
         clipToPadding = false
     }
     private val connectionSpacingVertical = dp(15)
+    private val connectionSpacingHorizontal = dp(15)
     private val connectionStateView = ConnectionStateView(context).apply {
         state = ConnectionStateView.State.SEARCH_PINE
-        updatePadding(left = dp(40), right = dp(40), top = dp(40), bottom = dp(40))
+        updatePadding(left = dp(15), right = dp(15), top = dp(15), bottom = dp(15))
     }
     private lateinit var controller: MessagePanelController
 
@@ -61,6 +64,7 @@ internal class UserScreenView @JvmOverloads constructor(
 
     fun updateMessageList(messageList: List<Message>) {
         adapter.setDataList(messageList)
+        messagePanel.sendButton.isEnabled = true
         Log.e("TAGTAG", "updateMessageList $messageList")
     }
 
@@ -74,6 +78,7 @@ internal class UserScreenView @JvmOverloads constructor(
             if (text.isNullOrBlank()) return@setOnClickListener
             messagePanel.inputView.setText(StringUtils.EMPTY)
             controller.sendMessage(text)
+            messagePanel.sendButton.isEnabled = false
         }
     }
 
@@ -81,7 +86,10 @@ internal class UserScreenView @JvmOverloads constructor(
         val availableWidth = MeasureSpec.getSize(widthMeasureSpec) - paddingStart - paddingEnd
         val availableHeight = MeasureSpec.getSize(heightMeasureSpec) - paddingTop - paddingBottom - connectionSpacingVertical * 2
         val childWidthSpec = makeExactlySpec(availableWidth)
-        connectionStateView.measure(makeUnspecifiedSpec(), makeUnspecifiedSpec())
+        connectionStateView.measure(
+            makeExactlySpec(availableWidth - connectionSpacingHorizontal * 2),
+            makeUnspecifiedSpec()
+        )
         messagePanel.measure(childWidthSpec, makeUnspecifiedSpec())
         messageListView.measure(
             childWidthSpec,
@@ -95,7 +103,7 @@ internal class UserScreenView @JvmOverloads constructor(
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         connectionStateView.layout(
-            paddingStart + (measuredWidth - connectionStateView.measuredWidth).half,
+            paddingStart + connectionSpacingHorizontal,
             paddingTop + connectionSpacingVertical
         )
         messageListView.layout(paddingStart, connectionStateView.bottom + connectionSpacingVertical)

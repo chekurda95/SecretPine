@@ -7,23 +7,25 @@ import com.chekurda.secret_pine.main_screen.data.Message
 
 internal class MessageListAdapter : RecyclerView.Adapter<MessageViewHolder>() {
 
-    var messageList: List<Message> = emptyList()
+    var messageList: MutableList<Message> = mutableListOf()
         private set
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         super.onAttachedToRecyclerView(recyclerView)
-        recyclerView.recycledViewPool.setMaxRecycledViews(MESSAGE_VIEW_HOLDER_TYPE, 100)
+        recyclerView.recycledViewPool.setMaxRecycledViews(INCOME_MESSAGE_VIEW_HOLDER_TYPE, 100)
     }
 
     fun setDataList(dataList: List<Message>) {
         val diffResult = calculateDiff(messageList, dataList)
-        messageList = dataList
+        messageList.clear()
+        messageList.addAll(dataList)
         diffResult.dispatchUpdatesTo(this)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder =
         when (viewType) {
-            MESSAGE_VIEW_HOLDER_TYPE -> MessageViewHolder(parent.context)
+            INCOME_MESSAGE_VIEW_HOLDER_TYPE -> MessageViewHolder(parent.context, isOutcome = false)
+            OUTCOME_MESSAGE_VIEW_HOLDER_TYPE -> MessageViewHolder(parent.context, isOutcome = true)
             else -> throw IllegalArgumentException("Unsupported view holder type $viewType")
         }
 
@@ -32,7 +34,10 @@ internal class MessageListAdapter : RecyclerView.Adapter<MessageViewHolder>() {
     }
 
     override fun getItemCount(): Int = messageList.size
-    override fun getItemViewType(position: Int): Int = MESSAGE_VIEW_HOLDER_TYPE
+    override fun getItemViewType(position: Int): Int =
+        if (messageList[position].isOutcome == true) OUTCOME_MESSAGE_VIEW_HOLDER_TYPE
+        else INCOME_MESSAGE_VIEW_HOLDER_TYPE
 }
 
-private const val MESSAGE_VIEW_HOLDER_TYPE = 1
+private const val INCOME_MESSAGE_VIEW_HOLDER_TYPE = 1
+private const val OUTCOME_MESSAGE_VIEW_HOLDER_TYPE = 2

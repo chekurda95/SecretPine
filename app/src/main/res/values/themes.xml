@@ -6,7 +6,7 @@
         <item name="colorAccent">@android:color/white</item>
         <item name="android:windowBackground">?colorPrimary</item>
         <item name="android:statusBarColor">@color/sky_color</item>
-        <item name="android:navigationBarColor">?colorPrimary</item>
+        <item name="android:navigationBarColor">@color/message_panel_background_color</item>
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
         <item name="editTextStyle">@style/InputViewStyle</item>
     </style>
