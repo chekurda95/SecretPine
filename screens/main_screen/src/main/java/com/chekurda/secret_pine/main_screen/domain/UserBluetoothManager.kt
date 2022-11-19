@@ -113,7 +113,6 @@ internal class UserBluetoothManager {
                 kotlin.runCatching {
                     isConnected = true
                     while (isConnected) {
-                        val checkRemote = pineSocket.remoteDevice
                         if (pineSocket.inputStream.available() != 0) {
                             pineSocket.inputStream.read()
                         } else {

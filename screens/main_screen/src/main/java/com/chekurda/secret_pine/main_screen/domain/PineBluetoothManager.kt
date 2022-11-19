@@ -122,12 +122,12 @@ internal class PineBluetoothManager {
                 super.run()
                 kotlin.runCatching {
                     while (isConnected) {
-                        val pineDevice = socket.remoteDevice
                         if (socket.inputStream.available() != 0) {
                             // Читаем список сообщений
                         } else {
                             socket.outputStream.write(ByteArray(0))
                         }
+                        sleep(1000)
                     }
                 }.apply {
                     Log.e("TAGTAG", "onSocketDisconnected")
