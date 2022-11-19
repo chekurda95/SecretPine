@@ -3,7 +3,6 @@ package com.chekurda.secret_pine.main_screen.presentation
 import android.app.Activity
 import android.os.Handler
 import com.chekurda.common.base_fragment.BasePresenter
-import com.chekurda.secret_pine.main_screen.presentation.views.device_picker.holder.DeviceViewHolder
 
 /**
  * Контракт главного экрана.

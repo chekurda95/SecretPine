@@ -47,8 +47,10 @@ internal class PineBluetoothManager {
     }
 
     private val deviceListDisposable = SerialDisposable()
+    private var connectionDisposable = SerialDisposable()
     private val disposer = CompositeDisposable().apply {
         add(deviceListDisposable)
+        add(connectionDisposable)
     }
 
     @Volatile
@@ -113,7 +115,7 @@ internal class PineBluetoothManager {
                     Log.e("TAGTAG", "Socket error ${it.message}\n${it.stackTraceToString()}")
                     startPineLoverSearching()
                 }
-            ).storeIn(disposer)
+            ).storeIn(connectionDisposable)
     }
 
     private fun addSocketObserver(socket: BluetoothSocket) {

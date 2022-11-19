@@ -1,4 +1,4 @@
-package com.chekurda.secret_pine.main_screen.presentation.views
+package com.chekurda.secret_pine.main_screen.presentation.views.pine
 
 import android.content.Context
 import android.graphics.Canvas
@@ -12,24 +12,21 @@ import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import com.chekurda.common.half
 import com.chekurda.design.custom_view_tools.TextLayout
-import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
+import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils
 import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.design.custom_view_tools.utils.safeRequestLayout
 import com.chekurda.secret_pine.main_screen.R
 import com.chekurda.secret_pine.main_screen.presentation.views.drawables.AnimatedDotsDrawable
 
-/**
- * Кнопка подключения.
- */
-internal class ConnectionButton @JvmOverloads constructor(
+internal class PineConnectionStateView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : View(context, attrs) {
 
-    enum class ButtonState(val text: String, @DrawableRes val backgroundRes: Int) {
-        CONNECT_SUGGESTION("Connect".uppercase(), R.drawable.connect_ripple_button_background),
-        DISCONNECT_SUGGESTION("Disconnect".uppercase(), R.drawable.disconnect_ripple_button_background),
-        WAITING_CONNECTION("Connecting".uppercase(), R.drawable.connect_ripple_button_background)
+    enum class State(val text: String, @DrawableRes val backgroundRes: Int) {
+        PREPARING("Pine preparing".uppercase(), R.drawable.connect_ripple_button_background),
+        CONNECTED("Connected".uppercase(), R.drawable.connect_ripple_button_background),
+        SEARCH_PINE_LOVERS("Pine lovers searching".uppercase(), R.drawable.connect_ripple_button_background)
     }
 
     private val textLayout = TextLayout {
@@ -41,13 +38,13 @@ internal class ConnectionButton @JvmOverloads constructor(
     }
 
     private val dotsDrawable = AnimatedDotsDrawable().apply {
-        callback = this@ConnectionButton
+        callback = this@PineConnectionStateView
         params = AnimatedDotsDrawable.DotsParams(size = dp(3))
         textColor = Color.WHITE
     }
     private val dotsSpacing = dp(2)
 
-    var buttonState: ButtonState = ButtonState.CONNECT_SUGGESTION
+    var state: State = State.PREPARING
         set(value) {
             field = value
             val isChanged = textLayout.configure { text = value.text }
@@ -58,16 +55,16 @@ internal class ConnectionButton @JvmOverloads constructor(
         }
 
     init {
-        buttonState = ButtonState.CONNECT_SUGGESTION
+        state = State.PREPARING
         outlineProvider = ViewOutlineProvider.BACKGROUND
         clipToOutline = true
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        dotsDrawable.setVisible(buttonState == ButtonState.WAITING_CONNECTION, false)
+        dotsDrawable.setVisible(state != State.CONNECTED, false)
         setMeasuredDimension(
-            measureDirection(widthMeasureSpec) { suggestedMinimumWidth },
-            measureDirection(widthMeasureSpec) { suggestedMinimumHeight },
+            MeasureSpecUtils.measureDirection(widthMeasureSpec) { suggestedMinimumWidth },
+            MeasureSpecUtils.measureDirection(widthMeasureSpec) { suggestedMinimumHeight },
         )
     }
 

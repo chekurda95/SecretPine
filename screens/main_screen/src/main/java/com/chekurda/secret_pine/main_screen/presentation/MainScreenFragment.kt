@@ -7,6 +7,8 @@ import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.view.View
+import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.Button
 import android.widget.Toast
 import androidx.core.view.isVisible
@@ -14,6 +16,9 @@ import androidx.fragment.app.Fragment
 import com.chekurda.common.base_fragment.BasePresenterFragment
 import com.chekurda.secret_pine.main_screen.R
 import com.chekurda.secret_pine.main_screen.contact.MainScreenFragmentFactory
+import com.chekurda.secret_pine.main_screen.presentation.views.pine.PineConnectionStateView
+import com.chekurda.secret_pine.main_screen.presentation.views.pine.PineScreenView
+import com.chekurda.secret_pine.main_screen.presentation.views.user.UserScreenView
 import com.chekurda.secret_pine.main_screen.utils.PermissionsHelper
 import com.chekurda.secret_pine.main_screen.utils.RecordingDeviceHelper
 
@@ -29,8 +34,11 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     override val layoutRes: Int = R.layout.main_screen_fragment
 
+    private var mainScreenView: ViewGroup? = null
     private var pineModeButton: Button? = null
     private var userModeButton: Button? = null
+    private var pineScreenView: PineScreenView? = null
+    private var userScreenView: UserScreenView? = null
 
     private var permissionsHelper: PermissionsHelper? = null
     private var deviceHelper: RecordingDeviceHelper? = null
@@ -48,27 +56,56 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initViews(view: View) {
+        mainScreenView = view.findViewById(R.id.main_screen_root)
         pineModeButton = view.findViewById<Button?>(R.id.pine_mode).apply {
-            setOnClickListener {
-                presenter.onPineModeSelected()
-                it.isVisible = false
-                userModeButton?.isVisible = false
-            }
+            setOnClickListener { onPineModeSelected() }
         }
         userModeButton = view.findViewById<Button?>(R.id.user_mode).apply {
-            setOnClickListener {
-                presenter.onUserModeSelected()
-                it.isVisible = false
-                pineModeButton?.isVisible = false
-            }
+            setOnClickListener { onUserModeSelected() }
+        }
+    }
+
+    private fun onPineModeSelected() {
+        mainScreenView?.apply {
+            removeAllViews()
+            userModeButton = null
+            pineModeButton = null
+            pineScreenView = PineScreenView(context)
+            addView(pineScreenView, MATCH_PARENT, MATCH_PARENT)
+            presenter.onPineModeSelected()
+        }
+    }
+
+    private fun onUserModeSelected() {
+        mainScreenView?.apply {
+            removeAllViews()
+            userModeButton = null
+            pineModeButton = null
+            userScreenView = UserScreenView(context)
+            addView(userScreenView, MATCH_PARENT, MATCH_PARENT)
+            presenter.onUserModeSelected()
         }
     }
 
     override fun updateSearchState(isRunning: Boolean) {
+        pineScreenView?.apply {
+            if (isRunning) {
+                state = PineConnectionStateView.State.SEARCH_PINE_LOVERS
+            }
+        } ?: userScreenView?.apply {
+
+        }
         Toast.makeText(context, "updateSearchState = $isRunning", Toast.LENGTH_SHORT).show()
     }
 
     override fun updateConnectionState(isConnected: Boolean) {
+        pineScreenView?.apply {
+            if (isConnected) {
+                state = PineConnectionStateView.State.CONNECTED
+            }
+        } ?: userScreenView?.apply {
+
+        }
         Toast.makeText(context, "updateConnectionState = $isConnected", Toast.LENGTH_SHORT).show()
     }
 
