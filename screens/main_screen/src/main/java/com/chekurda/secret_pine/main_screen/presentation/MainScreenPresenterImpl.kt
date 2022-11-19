@@ -1,41 +1,60 @@
 package com.chekurda.secret_pine.main_screen.presentation
 
 import com.chekurda.common.base_fragment.BasePresenterImpl
-import com.chekurda.secret_pine.main_screen.domain.PineBluetoothManager
+import com.chekurda.secret_pine.main_screen.domain.BluetoothManagerListener
 import com.chekurda.secret_pine.main_screen.domain.UserBluetoothManager
+import com.chekurda.secret_pine.main_screen.domain.PineBluetoothManager
 
 internal class MainScreenPresenterImpl : BasePresenterImpl<MainScreenContract.View>(),
     MainScreenContract.Presenter,
-    UserBluetoothManager.ProcessListener {
+    BluetoothManagerListener {
 
-    private var pineManager: PineBluetoothManager? = null
     private var userManager: UserBluetoothManager? = null
+    private var pineManager: PineBluetoothManager? = null
+    private var isConnected: Boolean = false
+
+    override fun attachView(view: MainScreenContract.View) {
+        super.attachView(view)
+        userManager?.init(view.provideActivity().applicationContext, view.provideHandler())
+        pineManager?.init(view.provideActivity().applicationContext, view.provideHandler())
+    }
+
+    override fun detachView() {
+        super.detachView()
+        userManager?.clear()
+        pineManager?.clear()
+    }
 
     override fun onPineModeSelected() {
         pineManager = PineBluetoothManager().apply {
-            connectionListener = { isConnected ->
-                view?.updateConnectionState(isConnected = isConnected)
-            }
-            startService(view!!.provideActivity(), view!!.provideHandler())
+            init(view!!.provideActivity().applicationContext, view!!.provideHandler())
+            listener = this@MainScreenPresenterImpl
+            startPineLoverSearching()
         }
     }
 
     override fun onUserModeSelected() {
         userManager = UserBluetoothManager().apply {
             init(view!!.provideActivity().applicationContext, view!!.provideHandler())
-            processListener = this@MainScreenPresenterImpl
-            startSearchPine()
+            listener = this@MainScreenPresenterImpl
+            startPineDetectService()
         }
     }
 
     override fun viewIsStarted() {
         super.viewIsStarted()
-        userManager?.startSearchPine()
+        if (!isConnected) {
+            userManager?.startPineDetectService()
+            pineManager?.startPineLoverSearching()
+        }
     }
 
     override fun viewIsStopped() {
         super.viewIsStopped()
-        userManager?.disconnect()
+        if (isConnected) {
+            userManager?.disconnect()
+            pineManager?.disconnect()
+        }
     }
 
     override fun onSearchStateChanged(isRunning: Boolean) {
@@ -43,10 +62,12 @@ internal class MainScreenPresenterImpl : BasePresenterImpl<MainScreenContract.Vi
     }
 
     override fun onConnectionSuccess() {
+        isConnected = true
         view?.updateConnectionState(isConnected = true)
     }
 
     override fun onConnectionCanceled(isError: Boolean) {
+        isConnected = false
         view?.updateConnectionState(isConnected = false)
     }
 

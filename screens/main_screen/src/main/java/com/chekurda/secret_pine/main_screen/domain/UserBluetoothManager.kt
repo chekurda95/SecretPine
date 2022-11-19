@@ -1,139 +1,134 @@
 package com.chekurda.secret_pine.main_screen.domain
 
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.content.Context
-import android.os.Bundle
+import android.content.Intent
 import android.os.Handler
 import android.util.Log
 import com.chekurda.common.storeIn
-import com.chekurda.secret_pine.main_screen.data.DeviceInfo
-import com.chekurda.secret_pine.main_screen.utils.SimpleReceiver
+import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.SerialDisposable
 import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.PublishSubject
 import java.lang.Exception
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 internal class UserBluetoothManager {
 
-    interface ProcessListener {
-        fun onConnectionSuccess()
-        fun onConnectionCanceled(isError: Boolean)
-        fun onSearchStateChanged(isRunning: Boolean)
-    }
-
-    var processListener: ProcessListener? = null
-
-    private var secureUUID = UUID.fromString(PINE_SECURE_UUID)
+    private var secureUUID = UUID.fromString(PINE_LOVER_SECURE_UUID)
     private val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
-    private var deviceBundleSubject = PublishSubject.create<Bundle>()
-    private val bluetoothDeviceSubject = deviceBundleSubject.map { extras ->
-        extras.getParcelable<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-    }.filter { device -> !device.name.isNullOrBlank() }
-
-    private val searchReceiver = SimpleReceiver(action = BluetoothDevice.ACTION_FOUND) {
-        deviceBundleSubject.onNext(it.extras!!)
-    }
-    private val searchStartReceiver = SimpleReceiver(
-        action = BluetoothAdapter.ACTION_DISCOVERY_STARTED,
-        isSingleEvent = true
-    ) {
-        processListener?.onSearchStateChanged(isRunning = true)
-        searchEndReceiver.register(appContext)
-    }
-    private val searchEndReceiver = SimpleReceiver(
-        action = BluetoothAdapter.ACTION_DISCOVERY_FINISHED,
-        isSingleEvent = true
-    ) {
-        processListener?.onSearchStateChanged(isRunning = false)
-        searchReceiver.unregister(appContext)
-    }
-
-    private val deviceListDisposable = SerialDisposable()
+    private val serviceDisposable = SerialDisposable()
+    private val discoverableDisposable = SerialDisposable()
     private val disposer = CompositeDisposable().apply {
-        add(deviceListDisposable)
+        add(serviceDisposable)
+        add(discoverableDisposable)
     }
 
     @Volatile
     private var isConnected: Boolean = false
-    private val isSearching: Boolean
-        get() = bluetoothAdapter.isDiscovering
+    private var isDiscoverable: Boolean = false
 
-    private lateinit var appContext: Context
-    private lateinit var mainHandler: Handler
+    private var messages: ByteArray = ByteArray(0)
+    private var originBluetoothName = ""
+
+    private var context: Context? = null
+    private var mainHandler: Handler? = null
+
+    var listener: BluetoothManagerListener? = null
 
     fun init(context: Context, mainHandler: Handler) {
-        appContext = context
+        this.context = context
         this.mainHandler = mainHandler
     }
 
-    fun startSearchPine() {
-        if (isSearching) stopSearchDevices()
-        subscribeOnDevices()
-        searchStartReceiver.register(appContext)
-        searchReceiver.register(appContext)
-        bluetoothAdapter.startDiscovery()
+    fun startPineDetectService() {
+        if (!isDiscoverable) makeDiscoverable()
+        openPineSearchingService()
+        originBluetoothName = bluetoothAdapter.name
+        bluetoothAdapter.name = "%s %s".format(PINE_LOVER_DEVICE_NAME, bluetoothAdapter.name)
     }
 
-    private fun stopSearchDevices() {
-        if (!isSearching) return
-        deviceListDisposable.set(null)
-        bluetoothAdapter.cancelDiscovery()
-        searchReceiver.unregister(appContext)
-        searchStartReceiver.unregister(appContext)
-        searchEndReceiver.unregister(appContext)
-        processListener?.onSearchStateChanged(isRunning = false)
+    private fun makeDiscoverable() {
+        val context = context ?: return
+        val discoverableIntent: Intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120)
+        }
+        context.startActivity(discoverableIntent)
+        isDiscoverable = true
+        Observable.timer(120, TimeUnit.SECONDS)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                isDiscoverable = false
+                if (!isConnected) makeDiscoverable()
+            }.storeIn(discoverableDisposable)
     }
 
-    private fun connect(pine: BluetoothDevice) {
-        if (isSearching) stopSearchDevices()
-        isConnected = true
+    @Volatile
+    private var serverSocket: BluetoothServerSocket? = null
+
+    private fun openPineSearchingService() {
+        if (context == null) return
+        Log.e("TAGTAG", "openPineSearchingService")
+        serverSocket?.close()
+        serverSocket = null
         Single.fromCallable {
-            val bluetoothDevice = bluetoothAdapter.getRemoteDevice(pine.address)
-            val socket = bluetoothDevice.createRfcommSocketToServiceRecord(secureUUID)
+            val serverSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(PINE_SERVICE_NAME, secureUUID)
+            this.serverSocket = serverSocket
+            val socket: BluetoothSocket?
             try {
-                socket.apply { connect() }
+                socket = serverSocket.accept()
             } catch (ex: Exception) {
-                socket.close()
+                serverSocket?.close()
                 throw Exception()
             }
+            socket!!
         }.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
                     Log.e("TAGTAG", "onSocketConnected")
-                    processListener?.onConnectionSuccess()
-                    addSocketObserver(it)
-                }, {
-                    Log.e("connect", "${it.message}\n${it.stackTraceToString()}")
-                    startSearchPine()
+                    startPineSocketObserver(it)
+                    listener?.onConnectionSuccess()
+                },
+                {
+                    Log.e("TAGTAG", "openPineSearchingService error ${it.message}\n${it.stackTraceToString()}")
+                    openPineSearchingService()
+                    listener?.onConnectionCanceled(isError = true)
                 }
-            ).storeIn(disposer)
+            )
+            .storeIn(serviceDisposable)
     }
 
-    private fun addSocketObserver(socket: BluetoothSocket) {
+    private fun startPineSocketObserver(pineSocket: BluetoothSocket) {
         val thread = object : Thread() {
             override fun run() {
                 super.run()
                 kotlin.runCatching {
+                    isConnected = true
                     while (isConnected) {
-                        val pineDevice = socket.remoteDevice
-                        if (socket.inputStream.available() != 0) {
-                            // Читаем список сообщений
+                        val checkRemote = pineSocket.remoteDevice
+                        if (pineSocket.inputStream.available() != 0) {
+                            pineSocket.inputStream.read()
                         } else {
-                            socket.outputStream.write(ByteArray(0))
+                            pineSocket.outputStream.write(messages)
                         }
+                        sleep(1000)
                     }
                 }.apply {
-                    socket.close()
+                    Log.e("TAGTAG", "onSocketDisconnected")
                     isConnected = false
-                    mainHandler.post { processListener?.onConnectionCanceled(isError = true) }
+                    pineSocket.close()
+                    serverSocket?.close()
+                    serverSocket = null
+                    mainHandler?.post { listener?.onConnectionCanceled(isError = false) }
+                    openPineSearchingService()
                 }
             }
         }
@@ -141,23 +136,31 @@ internal class UserBluetoothManager {
     }
 
     fun disconnect() {
+        Log.e("TAGTAG", "disconnect")
+        discoverableDisposable.set(null)
+        bluetoothAdapter.name = originBluetoothName
         if (!isConnected) return
         isConnected = false
-        processListener?.onConnectionCanceled(isError = false)
+        listener?.onConnectionCanceled(isError = false)
     }
 
-    private fun subscribeOnDevices() {
-        bluetoothDeviceSubject.subscribeOn(Schedulers.newThread())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { bluetoothDevice ->
-                if (!isConnected && bluetoothDevice?.name == PINE_DEVICE_NAME) {
-                    connect(bluetoothDevice)
-                }
-            }.storeIn(deviceListDisposable)
+    fun clear() {
+        Log.e("TAGTAG", "clear")
+        context = null
+        mainHandler = null
+        discoverableDisposable.set(null)
+        bluetoothAdapter.name = originBluetoothName
     }
 
     fun release() {
+        bluetoothAdapter.name = originBluetoothName
         isConnected = false
+        serverSocket?.close()
+        serverSocket = null
         disposer.dispose()
     }
 }
+
+internal const val PINE_LOVER_SECURE_UUID = "fa87c0d0-afac-11de-8a39-0800200c9a66"
+internal const val PINE_LOVER_DEVICE_NAME = "Pine lover"
+internal const val PINE_SERVICE_NAME = "Secret_pine_service"
