@@ -9,18 +9,26 @@
 
     <Button
         android:id="@+id/pine_mode"
+        style="@style/ModeButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Pine mode"
+        android:background="@drawable/pine_mode_ripple_button_background"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/user_mode"/>
 
     <Button
         android:id="@+id/user_mode"
+        style="@style/ModeButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="User mode"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:background="@drawable/pine_lover_mode_ripple_button_background"
+        app:layout_constraintTop_toBottomOf="@+id/pine_mode"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
