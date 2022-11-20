@@ -20,6 +20,7 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.lang.Exception
 import java.util.UUID
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
 
 internal class UserBluetoothManager {
@@ -40,6 +41,7 @@ internal class UserBluetoothManager {
 
     private var outputStream: ObjectOutputStream? = null
     private val messageList: MutableList<Message> = mutableListOf()
+    private var sendMessageQueue = ConcurrentLinkedQueue<Message>()
 
     private var originBluetoothName = ""
 
@@ -191,13 +193,10 @@ internal class UserBluetoothManager {
     }
 
     fun sendMessage(text: String) {
+        addInMessageQueue(text)
         val outputStream = outputStream ?: return
         Completable.fromCallable {
-            val message = Message(
-                uuid = UUID.randomUUID(),
-                senderName = originBluetoothName,
-                text = text
-            )
+            val message = sendMessageQueue.poll()
             outputStream.writeObject(message)
         }.subscribeOn(Schedulers.io())
             .subscribe(
@@ -205,6 +204,15 @@ internal class UserBluetoothManager {
                 { Log.e("TAGTAG", "onMessage sent error $it") }
             )
             .storeIn(disposer)
+    }
+
+    private fun addInMessageQueue(text: String) {
+        val message = Message(
+            uuid = UUID.randomUUID(),
+            senderName = originBluetoothName,
+            text = text
+        )
+        sendMessageQueue.add(message)
     }
 
     private fun prepareDeviceName() {

@@ -67,7 +67,6 @@ internal class UserScreenView @JvmOverloads constructor(
 
     fun updateMessageList(messageList: List<Message>) {
         adapter.setDataList(messageList)
-        messagePanel.sendButton.isEnabled = true
         // По-хорошему нужно подвязываться на видимость нижней ячейки, но чесн слово уже сил нет
         val needToScroll = true
         if (needToScroll) scrollToBottom()
@@ -86,7 +85,6 @@ internal class UserScreenView @JvmOverloads constructor(
             if (text.isNullOrBlank()) return
             inputView.setText(StringUtils.EMPTY)
             controller.sendMessage(text)
-            sendButton.isEnabled = false
         }
     }
 
