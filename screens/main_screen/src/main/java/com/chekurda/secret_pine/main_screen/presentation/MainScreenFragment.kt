@@ -178,7 +178,6 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 }
 
 private val permissions = arrayOf(
-    Manifest.permission.RECORD_AUDIO,
     Manifest.permission.BLUETOOTH,
     Manifest.permission.BLUETOOTH_ADMIN,
     Manifest.permission.ACCESS_FINE_LOCATION,
