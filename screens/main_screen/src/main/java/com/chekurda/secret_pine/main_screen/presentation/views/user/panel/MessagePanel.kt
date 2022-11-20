@@ -69,4 +69,10 @@ internal class MessagePanel @JvmOverloads constructor(
             inputView.bottom - sendButton.measuredHeight
         )
     }
+
+    override fun setEnabled(enabled: Boolean) {
+        super.setEnabled(enabled)
+        inputView.isEnabled = enabled
+        sendButton.isEnabled = enabled
+    }
 }

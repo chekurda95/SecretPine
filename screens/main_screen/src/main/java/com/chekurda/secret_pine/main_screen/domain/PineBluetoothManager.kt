@@ -201,7 +201,9 @@ internal class PineBluetoothManager {
     }
 
     private fun closeSocket() {
-        socket?.close()
+        try {
+            socket?.close()
+        } catch (ignore: Exception) { }
         socket = null
     }
 }

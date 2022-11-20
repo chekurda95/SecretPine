@@ -67,11 +67,11 @@ internal class UserBluetoothManager {
         val context = context ?: return
         val discoverableIntent: Intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 120)
+            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_SECONDS)
         }
         context.startActivity(discoverableIntent)
         isDiscoverable = true
-        Observable.timer(120, TimeUnit.SECONDS)
+        Observable.timer(DISCOVERABLE_SECONDS, TimeUnit.SECONDS)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
                 isDiscoverable = false
@@ -223,3 +223,4 @@ internal class UserBluetoothManager {
 internal const val PINE_LOVER_SECURE_UUID = "fa87c0d0-afac-11de-8a39-0800200c9a66"
 internal const val PINE_LOVER_DEVICE_NAME = "Pine lover"
 internal const val PINE_SERVICE_NAME = "Secret_pine_service"
+private const val DISCOVERABLE_SECONDS = 300L
