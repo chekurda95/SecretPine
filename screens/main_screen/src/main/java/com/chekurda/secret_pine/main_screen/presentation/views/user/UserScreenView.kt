@@ -95,7 +95,7 @@ internal class UserScreenView @JvmOverloads constructor(
         // По-хорошему нужно подвязываться на видимость нижней ячейки, но чесн слово уже сил нет
         val needToScroll = true
         if (needToScroll) scrollToBottom()
-        Log.e("TAGTAG", "updateMessageList $messageList")
+        Log.d("PineBluetoothManager", "updateMessageList $messageList")
     }
 
     private fun changeStateVisibility(isVisible: Boolean) {

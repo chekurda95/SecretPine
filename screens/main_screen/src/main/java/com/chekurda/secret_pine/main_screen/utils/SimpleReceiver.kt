@@ -22,14 +22,14 @@ internal class SimpleReceiver(
 
     fun register(context: Context) {
         if (isRegistered) return
-        Log.e("TAGTAG", "register Receiver $action")
+        Log.i("SimpleReceiver", "register Receiver $action")
         context.registerReceiver(this, intentFilter)
         isRegistered = true
     }
 
     fun unregister(context: Context) {
         if (!isRegistered) return
-        Log.e("TAGTAG", "unregister Receiver $action")
+        Log.i("SimpleReceiver", "unregister Receiver $action")
         try {
             context.unregisterReceiver(this)
         } catch (ignore: IllegalArgumentException) {}

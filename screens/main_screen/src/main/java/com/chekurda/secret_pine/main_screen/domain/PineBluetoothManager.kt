@@ -38,7 +38,7 @@ internal class PineBluetoothManager {
         action = BluetoothAdapter.ACTION_DISCOVERY_STARTED,
         isSingleEvent = true
     ) {
-        Log.e("TAGTAG", "Receiver On search started")
+        Log.i("PineBluetoothManager", "Receiver On search started")
         listener?.onSearchStateChanged(isRunning = true)
         context?.let(searchEndReceiver::register)
     }
@@ -46,7 +46,7 @@ internal class PineBluetoothManager {
         action = BluetoothAdapter.ACTION_DISCOVERY_FINISHED,
         isSingleEvent = true
     ) {
-        Log.e("TAGTAG", "Receiver On search end")
+        Log.i("PineBluetoothManager", "Receiver On search end")
         listener?.onSearchStateChanged(isRunning = false)
         context?.let(searchReceiver::unregister)
     }
@@ -79,7 +79,7 @@ internal class PineBluetoothManager {
 
     fun startPineLoverSearching() {
         val context = context ?: return
-        Log.e("TAGTAG", "startPineLoverSearching")
+        Log.d("PineBluetoothManager", "startPineLoverSearching")
         stopPineLoverSearching()
         subscribeOnDevices()
         searchStartReceiver.register(context)
@@ -89,7 +89,7 @@ internal class PineBluetoothManager {
 
     private fun stopPineLoverSearching() {
         val context = context ?: return
-        Log.e("TAGTAG", "stopPineLoverSearching")
+        Log.d("PineBluetoothManager", "stopPineLoverSearching")
         deviceListDisposable.set(null)
         bluetoothAdapter.cancelDiscovery()
         searchReceiver.unregister(context)
@@ -98,7 +98,7 @@ internal class PineBluetoothManager {
     }
 
     private fun connectToPineLover(pineLover: BluetoothDevice) {
-        Log.e("TAGTAG", "connectToPineLover")
+        Log.d("PineBluetoothManager", "connectToPineLover")
         if (isSearching) stopPineLoverSearching()
         isConnected = true
         Single.fromCallable {
@@ -114,11 +114,11 @@ internal class PineBluetoothManager {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    Log.e("TAGTAG", "On socket connected")
+                    Log.d("PineBluetoothManager", "onSocketConnected")
                     listener?.onConnectionSuccess()
                     addSocketObserver(it)
                 }, {
-                    Log.e("TAGTAG", "Socket error ${it.message}\n${it.stackTraceToString()}")
+                    Log.e("PineBluetoothManager", "Socket error ${it.message}\n${it.stackTraceToString()}")
                     isConnected = false
                     listener?.onConnectionCanceled(isError = false)
                 }
@@ -150,10 +150,10 @@ internal class PineBluetoothManager {
                             }
                             else -> socket.outputStream.write(ByteArray(0))
                         }
-                        Log.e("TAGTAG", "success write")
+                        Log.i("PineBluetoothManager", "success write")
                     }
                 }.apply {
-                    Log.e("TAGTAG", "onSocketDisconnected")
+                    Log.d("PineBluetoothManager", "onSocketDisconnected")
                     closeSocket()
                     isConnected = false
                     mainHandler?.post {
@@ -167,7 +167,7 @@ internal class PineBluetoothManager {
     }
 
     fun disconnect() {
-        Log.e("TAGTAG", "disconnect")
+        Log.d("PineBluetoothManager", "disconnect")
         closeSocket()
         if (!isConnected) return
         isConnected = false
@@ -175,11 +175,11 @@ internal class PineBluetoothManager {
     }
 
     private fun subscribeOnDevices() {
-        Log.e("TAGTAG", "subscribeOnDevices")
+        Log.d("PineBluetoothManager", "subscribeOnDevices")
         bluetoothDeviceSubject.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { bluetoothDevice ->
-                Log.e("TAGTAG", "on some device found")
+                Log.i("PineBluetoothManager", "on some device found")
                 if (!isConnected && bluetoothDevice?.name?.contains(PINE_LOVER_DEVICE_NAME) == true) {
                     connectToPineLover(bluetoothDevice)
                 }
@@ -187,7 +187,7 @@ internal class PineBluetoothManager {
     }
 
     fun clear() {
-        Log.e("TAGTAG", "clear")
+        Log.d("PineBluetoothManager", "clear")
         context = null
         mainHandler = null
         isConnected = false

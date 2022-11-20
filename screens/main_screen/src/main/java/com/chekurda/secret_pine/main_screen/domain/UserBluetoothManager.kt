@@ -59,7 +59,7 @@ internal class UserBluetoothManager {
 
     fun startPineDetectService() {
         if (isConnected) return
-        Log.e("TAGTAG", "startPineDetectService")
+        Log.d("UserBluetoothManager", "startPineDetectService")
         if (!isDiscoverable) makeDiscoverable()
         openPineSearchingService()
         prepareDeviceName()
@@ -88,7 +88,7 @@ internal class UserBluetoothManager {
 
     private fun openPineSearchingService() {
         if (context == null) return
-        Log.e("TAGTAG", "startPineSearchingService")
+        Log.d("UserBluetoothManager", "startPineSearchingService")
         serverSocket?.close()
         serverSocket = null
         Single.fromCallable {
@@ -105,12 +105,12 @@ internal class UserBluetoothManager {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    Log.e("TAGTAG", "onSocketConnected")
+                    Log.d("UserBluetoothManager", "onSocketConnected")
                     startPineSocketObserver(it)
                     listener?.onConnectionSuccess()
                 },
                 {
-                    Log.e("TAGTAG", "openPineSearchingService error ${it.message}\n${it.stackTraceToString()}")
+                    Log.e("UserBluetoothManager", "openPineSearchingService error ${it.message}\n${it.stackTraceToString()}")
                     isConnected = false
                     closeServerSocket()
                     listener?.onConnectionCanceled(isError = true)
@@ -148,13 +148,13 @@ internal class UserBluetoothManager {
                                 }
                                 else -> Unit
                             }
-                            Log.e("TAGTAG", "success write")
+                            Log.i("UserBluetoothManager", "success write")
                         } else {
                             pineSocket.outputStream.write(connectionCheckArray)
                         }
                     }
                 }.apply {
-                    Log.e("TAGTAG", "onSocketDisconnected")
+                    Log.d("UserBluetoothManager", "onSocketDisconnected")
                     isConnected = false
 
                     pineSocket.close()
@@ -170,7 +170,7 @@ internal class UserBluetoothManager {
     }
 
     fun disconnect() {
-        Log.e("TAGTAG", "disconnect")
+        Log.d("UserBluetoothManager", "disconnect")
         bluetoothAdapter.name = originBluetoothName
         closeServerSocket()
         if (!isConnected) return
@@ -179,7 +179,7 @@ internal class UserBluetoothManager {
     }
 
     fun clear() {
-        Log.e("TAGTAG", "clear")
+        Log.d("UserBluetoothManager", "clear")
         context = null
         mainHandler = null
         isConnected = false
@@ -202,8 +202,8 @@ internal class UserBluetoothManager {
             outputStream.writeObject(message)
         }.subscribeOn(Schedulers.io())
             .subscribe(
-                { Log.e("TAGTAG", "onMessage sent") },
-                { Log.e("TAGTAG", "onMessage sent error $it") }
+                { Log.d("UserBluetoothManager", "onMessage sent") },
+                { Log.d("UserBluetoothManager", "onMessage send error $it") }
             )
             .storeIn(disposer)
     }
