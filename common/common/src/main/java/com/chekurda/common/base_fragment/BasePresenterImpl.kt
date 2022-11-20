@@ -11,6 +11,9 @@ abstract class BasePresenterImpl<VIEW> : BasePresenter<VIEW>, LifecycleObserver 
 
     protected var view: VIEW? = null
 
+    protected var isStarted: Boolean = false
+    protected var isResumed: Boolean = false
+
     override fun attachView(view: VIEW) {
         this.view = view
     }
@@ -20,13 +23,21 @@ abstract class BasePresenterImpl<VIEW> : BasePresenter<VIEW>, LifecycleObserver 
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    open fun viewIsStarted() = Unit
+    open fun viewIsStarted() {
+        isStarted = true
+    }
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    open fun viewIsResumed() = Unit
+    open fun viewIsResumed() {
+        isResumed = true
+    }
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    open fun viewIsPaused() = Unit
+    open fun viewIsPaused() {
+        isResumed = false
+    }
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    open fun viewIsStopped() = Unit
+    open fun viewIsStopped() {
+        isStarted = false
+    }
 
     override fun onDestroy() = Unit
 }

@@ -56,6 +56,7 @@ internal class UserBluetoothManager {
 
     fun startPineDetectService() {
         if (isConnected) return
+        Log.e("TAGTAG", "startPineDetectService")
         if (!isDiscoverable) makeDiscoverable()
         openPineSearchingService()
         prepareDeviceName()
@@ -82,7 +83,7 @@ internal class UserBluetoothManager {
 
     private fun openPineSearchingService() {
         if (context == null) return
-        Log.e("TAGTAG", "openPineSearchingService")
+        Log.e("TAGTAG", "startPineSearchingService")
         serverSocket?.close()
         serverSocket = null
         Single.fromCallable {
@@ -105,7 +106,8 @@ internal class UserBluetoothManager {
                 },
                 {
                     Log.e("TAGTAG", "openPineSearchingService error ${it.message}\n${it.stackTraceToString()}")
-                    openPineSearchingService()
+                    isConnected = false
+                    closeServerSocket()
                     listener?.onConnectionCanceled(isError = true)
                 }
             )
@@ -151,13 +153,11 @@ internal class UserBluetoothManager {
                     isConnected = false
 
                     pineSocket.close()
-                    serverSocket?.close()
-                    serverSocket = null
+                    closeServerSocket()
                     mainHandler?.post {
                         this@UserBluetoothManager.outputStream = null
                         listener?.onConnectionCanceled(isError = false)
                     }
-                    openPineSearchingService()
                 }
             }
         }
@@ -166,8 +166,8 @@ internal class UserBluetoothManager {
 
     fun disconnect() {
         Log.e("TAGTAG", "disconnect")
-        discoverableDisposable.set(null)
         bluetoothAdapter.name = originBluetoothName
+        closeServerSocket()
         if (!isConnected) return
         isConnected = false
         listener?.onConnectionCanceled(isError = false)
@@ -177,15 +177,15 @@ internal class UserBluetoothManager {
         Log.e("TAGTAG", "clear")
         context = null
         mainHandler = null
-        discoverableDisposable.set(null)
+        isConnected = false
+        closeServerSocket()
         bluetoothAdapter.name = originBluetoothName
     }
 
     fun release() {
         bluetoothAdapter.name = originBluetoothName
         isConnected = false
-        serverSocket?.close()
-        serverSocket = null
+        closeServerSocket()
         disposer.dispose()
     }
 
@@ -211,6 +211,11 @@ internal class UserBluetoothManager {
         if (!originBluetoothName.contains(PINE_LOVER_DEVICE_NAME)) {
             bluetoothAdapter.name = "%s %s".format(PINE_LOVER_DEVICE_NAME, bluetoothAdapter.name)
         }
+    }
+
+    private fun closeServerSocket() {
+        serverSocket?.close()
+        serverSocket = null
     }
 }
 

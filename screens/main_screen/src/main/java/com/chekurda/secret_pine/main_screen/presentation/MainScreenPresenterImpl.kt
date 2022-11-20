@@ -62,6 +62,9 @@ internal class MainScreenPresenterImpl : BasePresenterImpl<MainScreenContract.Vi
 
     override fun onSearchStateChanged(isRunning: Boolean) {
         view?.updateSearchState(isRunning)
+        if (isStarted && !isRunning && !isConnected) {
+            pineManager?.startPineLoverSearching()
+        }
     }
 
     override fun onConnectionSuccess() {
@@ -72,6 +75,10 @@ internal class MainScreenPresenterImpl : BasePresenterImpl<MainScreenContract.Vi
     override fun onConnectionCanceled(isError: Boolean) {
         isConnected = false
         view?.updateConnectionState(isConnected = false)
+        if (isStarted) {
+            userManager?.startPineDetectService()
+            pineManager?.startPineLoverSearching()
+        }
     }
 
     override fun sendMessage(text: String) {

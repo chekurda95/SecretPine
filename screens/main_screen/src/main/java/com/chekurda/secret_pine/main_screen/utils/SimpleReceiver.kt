@@ -4,9 +4,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.util.Log
 
 internal class SimpleReceiver(
-    action: String,
+    private val action: String,
     private val isSingleEvent: Boolean = false,
     private val onReceive: (Intent) -> Unit
 ) : BroadcastReceiver() {
@@ -21,12 +22,14 @@ internal class SimpleReceiver(
 
     fun register(context: Context) {
         if (isRegistered) return
+        Log.e("TAGTAG", "register Receiver $action")
         context.registerReceiver(this, intentFilter)
         isRegistered = true
     }
 
     fun unregister(context: Context) {
         if (!isRegistered) return
+        Log.e("TAGTAG", "unregister Receiver $action")
         try {
             context.unregisterReceiver(this)
         } catch (ignore: IllegalArgumentException) {}

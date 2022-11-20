@@ -38,6 +38,7 @@ internal class PineBluetoothManager {
         action = BluetoothAdapter.ACTION_DISCOVERY_STARTED,
         isSingleEvent = true
     ) {
+        Log.e("TAGTAG", "Receiver On search started")
         listener?.onSearchStateChanged(isRunning = true)
         context?.let(searchEndReceiver::register)
     }
@@ -45,6 +46,7 @@ internal class PineBluetoothManager {
         action = BluetoothAdapter.ACTION_DISCOVERY_FINISHED,
         isSingleEvent = true
     ) {
+        Log.e("TAGTAG", "Receiver On search end")
         listener?.onSearchStateChanged(isRunning = false)
         context?.let(searchReceiver::unregister)
     }
@@ -75,9 +77,9 @@ internal class PineBluetoothManager {
     }
 
     fun startPineLoverSearching() {
-        Log.e("TAGTAG", "startPineLoverSearching")
         val context = context ?: return
-        if (isSearching) stopPineLoverSearching()
+        Log.e("TAGTAG", "startPineLoverSearching")
+        stopPineLoverSearching()
         subscribeOnDevices()
         searchStartReceiver.register(context)
         searchReceiver.register(context)
@@ -85,15 +87,13 @@ internal class PineBluetoothManager {
     }
 
     private fun stopPineLoverSearching() {
-        Log.e("TAGTAG", "stopPineLoverSearching")
         val context = context ?: return
-        if (!isSearching) return
+        Log.e("TAGTAG", "stopPineLoverSearching")
         deviceListDisposable.set(null)
         bluetoothAdapter.cancelDiscovery()
         searchReceiver.unregister(context)
         searchStartReceiver.unregister(context)
         searchEndReceiver.unregister(context)
-        listener?.onSearchStateChanged(isRunning = false)
     }
 
     private fun connectToPineLover(pineLover: BluetoothDevice) {
@@ -113,12 +113,13 @@ internal class PineBluetoothManager {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    Log.e("TAGTAG", "on socket connected")
+                    Log.e("TAGTAG", "On socket connected")
                     listener?.onConnectionSuccess()
                     addSocketObserver(it)
                 }, {
                     Log.e("TAGTAG", "Socket error ${it.message}\n${it.stackTraceToString()}")
-                    startPineLoverSearching()
+                    isConnected = false
+                    listener?.onConnectionCanceled(isError = false)
                 }
             ).storeIn(connectionDisposable)
     }
@@ -172,7 +173,7 @@ internal class PineBluetoothManager {
 
     private fun subscribeOnDevices() {
         Log.e("TAGTAG", "subscribeOnDevices")
-        bluetoothDeviceSubject.subscribeOn(Schedulers.newThread())
+        bluetoothDeviceSubject.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { bluetoothDevice ->
                 Log.e("TAGTAG", "on some device found")
