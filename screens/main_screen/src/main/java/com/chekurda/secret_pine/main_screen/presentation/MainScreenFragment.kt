@@ -14,6 +14,7 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.Button
 import androidx.core.animation.doOnEnd
 import androidx.core.view.doOnPreDraw
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.chekurda.common.base_fragment.BasePresenterFragment
 import com.chekurda.design.custom_view_tools.utils.dp
@@ -140,13 +141,14 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         mainScreenView?.apply {
             addView(view, MATCH_PARENT, MATCH_PARENT)
             view.translationZ = dp(20).toFloat()
+            view.alpha = 0f
             ValueAnimator.ofFloat(0f, 1f).apply {
                 interpolator = DecelerateInterpolator()
-                duration = 250
+                duration = 300
                 var startPosition = 0
                 addUpdateListener {
-                    alpha = it.animatedFraction
-                    translationX = startPosition * (1f - animatedFraction)
+                    view.alpha = it.animatedFraction
+                    view.translationX = startPosition * (1f - animatedFraction)
                 }
                 doOnEnd {
                     removeView(pineModeButton)
