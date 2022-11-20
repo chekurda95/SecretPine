@@ -52,6 +52,7 @@ internal class UserBluetoothManager {
     fun init(context: Context, mainHandler: Handler) {
         this.context = context
         this.mainHandler = mainHandler
+        bluetoothAdapter.enable()
     }
 
     fun startPineDetectService() {
