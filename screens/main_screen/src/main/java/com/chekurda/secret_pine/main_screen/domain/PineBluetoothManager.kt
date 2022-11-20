@@ -67,6 +67,7 @@ internal class PineBluetoothManager {
 
     private var context: Context? = null
     private var mainHandler: Handler? = null
+    private var socket: BluetoothSocket? = null
 
     var listener: BluetoothManagerListener? = null
 
@@ -125,6 +126,7 @@ internal class PineBluetoothManager {
     }
 
     private fun addSocketObserver(socket: BluetoothSocket) {
+        this.socket = socket
         val thread = object : Thread() {
 
             override fun run() {
@@ -152,7 +154,7 @@ internal class PineBluetoothManager {
                     }
                 }.apply {
                     Log.e("TAGTAG", "onSocketDisconnected")
-                    socket.close()
+                    closeSocket()
                     isConnected = false
                     mainHandler?.post {
                         startPineLoverSearching()
@@ -166,6 +168,7 @@ internal class PineBluetoothManager {
 
     fun disconnect() {
         Log.e("TAGTAG", "disconnect")
+        closeSocket()
         if (!isConnected) return
         isConnected = false
         listener?.onConnectionCanceled(isError = false)
@@ -187,10 +190,18 @@ internal class PineBluetoothManager {
         Log.e("TAGTAG", "clear")
         context = null
         mainHandler = null
+        isConnected = false
+        closeSocket()
     }
 
     fun release() {
         isConnected = false
         disposer.dispose()
+        closeSocket()
+    }
+
+    private fun closeSocket() {
+        socket?.close()
+        socket = null
     }
 }
