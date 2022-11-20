@@ -17,6 +17,10 @@ internal class PermissionsHelper(
     private val requestCode: Int
 ) {
 
+    fun requestPermissions() {
+        withPermissions { }
+    }
+
     /**
      * Выполнить действие [action], если имеются указанные разрешения [permissions],
      * если разрешений нет, то произойдет запрос по коду [requestCode].

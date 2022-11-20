@@ -12,9 +12,7 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.animation.DecelerateInterpolator
 import android.widget.Button
-import android.widget.Toast
 import androidx.core.animation.doOnEnd
-import androidx.core.view.children
 import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
 import com.chekurda.common.base_fragment.BasePresenterFragment
@@ -65,10 +63,18 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     private fun initViews(view: View) {
         mainScreenView = view.findViewById(R.id.main_screen_root)
         pineModeButton = view.findViewById<Button?>(R.id.pine_mode).apply {
-            setOnClickListener { onPineModeSelected() }
+            setOnClickListener {
+                permissionsHelper?.withPermissions {
+                    onPineModeSelected()
+                }
+            }
         }
         userModeButton = view.findViewById<Button?>(R.id.user_mode).apply {
-            setOnClickListener { onUserModeSelected() }
+            setOnClickListener {
+                permissionsHelper?.withPermissions {
+                    onUserModeSelected()
+                }
+            }
         }
     }
 
@@ -114,6 +120,11 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     override fun onStop() {
         super.onStop()
         deviceHelper?.configureDevice(isStartRecording = false)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        permissionsHelper?.requestPermissions()
     }
 
     override fun onDestroyView() {
