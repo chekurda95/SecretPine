@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.chekurda.common.half
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeExactlySpec
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeUnspecifiedSpec
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
@@ -29,18 +28,22 @@ internal class UserScreenView @JvmOverloads constructor(
 
     private val messagePanel = MessagePanel(context).apply {
         isEnabled = false
+        sendButton.setOnClickListener { onSendButtonClicked() }
     }
     private val messageListView = RecyclerView(context).apply {
         adapter = this@UserScreenView.adapter
         layoutManager = object : LinearLayoutManager(context) {
+            init {
+                stackFromEnd = true
+            }
+
             override fun onLayoutChildren(recycler: RecyclerView.Recycler, state: RecyclerView.State) {
                 kotlin.runCatching { super.onLayoutChildren(recycler, state) }
             }
         }
         clipToPadding = false
+        updatePadding(top = dp(10), bottom = dp(10))
     }
-    private val connectionSpacingVertical = dp(15)
-    private val connectionSpacingHorizontal = dp(15)
     private val connectionStateView = ConnectionStateView(context).apply {
         state = ConnectionStateView.State.SEARCH_PINE
         updatePadding(left = dp(15), right = dp(15), top = dp(15), bottom = dp(15))
@@ -65,6 +68,9 @@ internal class UserScreenView @JvmOverloads constructor(
     fun updateMessageList(messageList: List<Message>) {
         adapter.setDataList(messageList)
         messagePanel.sendButton.isEnabled = true
+        // По-хорошему нужно подвязываться на видимость нижней ячейки, но чесн слово уже сил нет
+        val needToScroll = true
+        if (needToScroll) scrollToBottom()
         Log.e("TAGTAG", "updateMessageList $messageList")
     }
 
@@ -72,22 +78,28 @@ internal class UserScreenView @JvmOverloads constructor(
         addView(messageListView)
         addView(connectionStateView)
         addView(messagePanel)
+    }
 
-        messagePanel.sendButton.setOnClickListener {
-            val text = messagePanel.inputView.text?.toString()
-            if (text.isNullOrBlank()) return@setOnClickListener
-            messagePanel.inputView.setText(StringUtils.EMPTY)
+    private fun onSendButtonClicked() {
+        messagePanel.apply {
+            val text = inputView.text?.toString()
+            if (text.isNullOrBlank()) return
+            inputView.setText(StringUtils.EMPTY)
             controller.sendMessage(text)
-            messagePanel.sendButton.isEnabled = false
+            sendButton.isEnabled = false
         }
+    }
+
+    private fun scrollToBottom() {
+        messageListView.scrollBy(0, Int.MAX_VALUE)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val availableWidth = MeasureSpec.getSize(widthMeasureSpec) - paddingStart - paddingEnd
-        val availableHeight = MeasureSpec.getSize(heightMeasureSpec) - paddingTop - paddingBottom - connectionSpacingVertical * 2
+        val availableHeight = MeasureSpec.getSize(heightMeasureSpec) - paddingTop - paddingBottom
         val childWidthSpec = makeExactlySpec(availableWidth)
         connectionStateView.measure(
-            makeExactlySpec(availableWidth - connectionSpacingHorizontal * 2),
+            makeExactlySpec(availableWidth),
             makeUnspecifiedSpec()
         )
         messagePanel.measure(childWidthSpec, makeUnspecifiedSpec())
@@ -102,11 +114,8 @@ internal class UserScreenView @JvmOverloads constructor(
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        connectionStateView.layout(
-            paddingStart + connectionSpacingHorizontal,
-            paddingTop + connectionSpacingVertical
-        )
-        messageListView.layout(paddingStart, connectionStateView.bottom + connectionSpacingVertical)
+        connectionStateView.layout(paddingStart, paddingTop)
+        messageListView.layout(paddingStart, connectionStateView.bottom)
         messagePanel.layout(
             paddingStart,
             measuredHeight - paddingBottom - messagePanel.measuredHeight

@@ -31,7 +31,7 @@ internal class MessageItemView(
     private val senderNameLayout = TextLayout {
         paint.apply {
             textSize = dp(20).toFloat()
-            color = Color.WHITE
+            color = Color.BLACK
         }
         includeFontPad = false
         isVisible = !isOutcome
@@ -45,7 +45,7 @@ internal class MessageItemView(
         includeFontPad = false
     }
     private val cloudInnerPadding = dp(12)
-    private val horizontalEmptySpace = dp(45)
+    private val horizontalEmptySpace = dp(50)
 
     private lateinit var message: Message
 
