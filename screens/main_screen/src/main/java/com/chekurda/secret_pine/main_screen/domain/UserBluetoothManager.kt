@@ -124,31 +124,27 @@ internal class UserBluetoothManager {
                     val connectionCheckArray = ByteArray(0)
                     while (isConnected) {
                         if (pineSocket.inputStream.available() != 0) {
-                            try {
-                                when (val obj = inputStream.readObject()) {
-                                     is List<*> -> (obj as? List<Message>)?.also { inputMessageList ->
-                                        mainHandler?.post {
-                                            messageList.clear()
-                                            val mappedList = inputMessageList.apply { map { it.isOutcome = it.senderName == originBluetoothName }}
-                                            messageList.addAll(mappedList)
-                                            onMessageListChanged?.invoke(messageList)
-                                        }
+                            when (val obj = inputStream.readObject()) {
+                                is List<*> -> (obj as? List<Message>)?.also { inputMessageList ->
+                                    mainHandler?.post {
+                                        messageList.clear()
+                                        val mappedList = inputMessageList.apply { map { it.isOutcome = it.senderName == originBluetoothName }}
+                                        messageList.addAll(mappedList)
+                                        onMessageListChanged?.invoke(messageList)
                                     }
-                                    is Message -> {
-                                        mainHandler?.post {
-                                            messageList.add(obj.apply { isOutcome = senderName == originBluetoothName })
-                                            onMessageListChanged?.invoke(messageList)
-                                        }
-                                    }
-                                    else -> Unit
                                 }
-                            } catch (ex: Exception) {
-                                Log.e("TAGAG", "readListException = $ex")
+                                is Message -> {
+                                    mainHandler?.post {
+                                        messageList.add(obj.apply { isOutcome = senderName == originBluetoothName })
+                                        onMessageListChanged?.invoke(messageList)
+                                    }
+                                }
+                                else -> Unit
                             }
+                            Log.e("TAGTAG", "success write")
                         } else {
                             pineSocket.outputStream.write(connectionCheckArray)
                         }
-                        sleep(1000)
                     }
                 }.apply {
                     Log.e("TAGTAG", "onSocketDisconnected")

@@ -133,26 +133,21 @@ internal class PineBluetoothManager {
                     val inputStream = ObjectInputStream(socket.inputStream)
                     val outputStream = ObjectOutputStream(socket.outputStream)
                     while (isConnected) {
-                        try {
-                            when {
-                                socket.inputStream.available() != 0 -> {
-                                    val obj = inputStream.readObject()
-                                    if (obj is Message) {
-                                        messageStoreList.add(obj)
-                                        outputStream.writeObject(obj)
-                                    }
+                        when {
+                            socket.inputStream.available() != 0 -> {
+                                val obj = inputStream.readObject()
+                                if (obj is Message) {
+                                    messageStoreList.add(obj)
+                                    outputStream.writeObject(obj)
                                 }
-                                !allMessagesDelivered -> {
-                                    outputStream.writeObject(messageStoreList)
-                                    allMessagesDelivered = true
-                                }
-                                else -> socket.outputStream.write(ByteArray(0))
                             }
-                            Log.e("TAGTAG", "success write")
-                        } catch (ex: Exception) {
-                            Log.e("TAGTAG", "stream exception $ex")
+                            !allMessagesDelivered -> {
+                                outputStream.writeObject(messageStoreList)
+                                allMessagesDelivered = true
+                            }
+                            else -> socket.outputStream.write(ByteArray(0))
                         }
-                        sleep(1000)
+                        Log.e("TAGTAG", "success write")
                     }
                 }.apply {
                     Log.e("TAGTAG", "onSocketDisconnected")
