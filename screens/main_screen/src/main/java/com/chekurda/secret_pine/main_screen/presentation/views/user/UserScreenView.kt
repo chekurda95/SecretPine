@@ -1,13 +1,20 @@
 package com.chekurda.secret_pine.main_screen.presentation.views.user
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.ViewGroup
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
+import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
+import androidx.core.view.doOnPreDraw
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.chekurda.common.half
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeExactlySpec
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeUnspecifiedSpec
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
@@ -48,17 +55,26 @@ internal class UserScreenView @JvmOverloads constructor(
     }
     private val connectionStateView = ConnectionStateView(context).apply {
         state = ConnectionStateView.State.SEARCH_PINE
-        updatePadding(left = dp(15), right = dp(15), top = dp(15), bottom = dp(15))
+        updatePadding(left = dp(45), right = dp(45), top = dp(15), bottom = dp(15))
     }
+    private val connectionStateViewTopSpacing = dp(25)
+    private var connectionAnimator: ValueAnimator? = null
+    private var connectionStateRunnable = Runnable {
+        changeStateVisibility(isVisible = state != ConnectionStateView.State.CONNECTED)
+    }
+
     private lateinit var controller: MessagePanelController
 
     var state: ConnectionStateView.State
         get() = connectionStateView.state
         set(value) {
             connectionStateView.state = value
+            removeCallbacks(connectionStateRunnable)
+            postDelayed(connectionStateRunnable, CONNECTION_SHOWING_TIME_MS)
         }
 
     init {
+        setWillNotDraw(false)
         addView(messageListView)
         addView(connectionStateView)
         addView(messagePanel)
@@ -82,6 +98,35 @@ internal class UserScreenView @JvmOverloads constructor(
         Log.e("TAGTAG", "updateMessageList $messageList")
     }
 
+    private fun changeStateVisibility(isVisible: Boolean) {
+        if (isVisible == connectionStateView.isVisible) return
+        connectionAnimator?.cancel()
+        var translationDistance = 0
+        connectionAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = STATE_ANIMATION_DURATION_MS
+            if (isVisible) {
+                connectionStateView.isVisible = true
+                interpolator = DecelerateInterpolator()
+                addUpdateListener {
+                    connectionStateView.translationY = - translationDistance * (1f - animatedFraction)
+                }
+            } else {
+                interpolator = AccelerateInterpolator()
+                addUpdateListener {
+                    connectionStateView.translationY = - translationDistance * animatedFraction
+                }
+                doOnEnd { connectionStateView.isVisible = false }
+            }
+            start()
+            pause()
+            doOnPreDraw {
+                translationDistance = connectionStateView.height + connectionStateViewTopSpacing
+                resume()
+            }
+        }
+        invalidate()
+    }
+
     private fun onSendButtonClicked() {
         messagePanel.apply {
             val text = inputView.text?.toString()
@@ -99,14 +144,11 @@ internal class UserScreenView @JvmOverloads constructor(
         val availableWidth = MeasureSpec.getSize(widthMeasureSpec) - paddingStart - paddingEnd
         val availableHeight = MeasureSpec.getSize(heightMeasureSpec) - paddingTop - paddingBottom
         val childWidthSpec = makeExactlySpec(availableWidth)
-        connectionStateView.measure(
-            makeExactlySpec(availableWidth),
-            makeUnspecifiedSpec()
-        )
+        connectionStateView.measure(makeUnspecifiedSpec(), makeUnspecifiedSpec())
         messagePanel.measure(childWidthSpec, makeUnspecifiedSpec())
         messageListView.measure(
             childWidthSpec,
-            makeExactlySpec(availableHeight - connectionStateView.measuredHeight - messagePanel.measuredHeight)
+            makeExactlySpec(availableHeight - messagePanel.measuredHeight)
         )
         setMeasuredDimension(
             measureDirection(widthMeasureSpec) { suggestedMinimumWidth },
@@ -115,11 +157,17 @@ internal class UserScreenView @JvmOverloads constructor(
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        connectionStateView.layout(paddingStart, paddingTop)
-        messageListView.layout(paddingStart, connectionStateView.bottom)
+        messageListView.layout(paddingStart, paddingTop)
         messagePanel.layout(
             paddingStart,
             measuredHeight - paddingBottom - messagePanel.measuredHeight
         )
+        connectionStateView.layout(
+            paddingStart + (measuredWidth - connectionStateView.measuredWidth).half,
+            paddingTop + connectionStateViewTopSpacing
+        )
     }
 }
+
+private const val CONNECTION_SHOWING_TIME_MS = 500L
+private const val STATE_ANIMATION_DURATION_MS = 250L
