@@ -25,7 +25,6 @@ import com.chekurda.secret_pine.main_screen.presentation.views.ConnectionStateVi
 import com.chekurda.secret_pine.main_screen.presentation.views.pine.PineScreenView
 import com.chekurda.secret_pine.main_screen.presentation.views.user.UserScreenView
 import com.chekurda.secret_pine.main_screen.utils.PermissionsHelper
-import com.chekurda.secret_pine.main_screen.utils.RecordingDeviceHelper
 import kotlin.math.roundToInt
 
 /**
@@ -47,12 +46,10 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
     private var userScreenView: UserScreenView? = null
 
     private var permissionsHelper: PermissionsHelper? = null
-    private var deviceHelper: RecordingDeviceHelper? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
         permissionsHelper = PermissionsHelper(requireActivity(), permissions, PERMISSIONS_REQUEST_CODE)
-        deviceHelper = RecordingDeviceHelper(requireActivity())
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -111,16 +108,6 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     override fun updateMessageList(messageList: List<Message>) {
         userScreenView?.updateMessageList(messageList)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        deviceHelper?.configureDevice(isStartRecording = true)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        deviceHelper?.configureDevice(isStartRecording = false)
     }
 
     override fun onResume() {
