@@ -67,18 +67,20 @@ internal class UserBluetoothManager {
 
     private fun makeDiscoverable() {
         val context = context ?: return
-        val discoverableIntent: Intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_SECONDS)
+        if (bluetoothAdapter.scanMode != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+            val discoverableIntent: Intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, DISCOVERABLE_SECONDS)
+            }
+            context.startActivity(discoverableIntent)
+            Observable.timer(DISCOVERABLE_SECONDS, TimeUnit.SECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    isDiscoverable = false
+                    if (!isConnected) makeDiscoverable()
+                }.storeIn(discoverableDisposable)
         }
-        context.startActivity(discoverableIntent)
         isDiscoverable = true
-        Observable.timer(DISCOVERABLE_SECONDS, TimeUnit.SECONDS)
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                isDiscoverable = false
-                if (!isConnected) makeDiscoverable()
-            }.storeIn(discoverableDisposable)
     }
 
     @Volatile
