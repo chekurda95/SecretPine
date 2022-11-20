@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -12,6 +13,7 @@ import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.makeUnspecif
 import com.chekurda.design.custom_view_tools.utils.MeasureSpecUtils.measureDirection
 import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.design.custom_view_tools.utils.layout
+import com.chekurda.secret_pine.main_screen.R
 import com.chekurda.secret_pine.main_screen.data.Message
 import com.chekurda.secret_pine.main_screen.presentation.views.ConnectionStateView
 import com.chekurda.secret_pine.main_screen.presentation.views.user.list.MessageListAdapter
@@ -56,6 +58,13 @@ internal class UserScreenView @JvmOverloads constructor(
             connectionStateView.state = value
         }
 
+    init {
+        addView(messageListView)
+        addView(connectionStateView)
+        addView(messagePanel)
+        background = ContextCompat.getDrawable(context, R.drawable.main_screen_background)
+    }
+
     fun attachController(controller: MessagePanelController) {
         this.controller = controller
     }
@@ -71,12 +80,6 @@ internal class UserScreenView @JvmOverloads constructor(
         val needToScroll = true
         if (needToScroll) scrollToBottom()
         Log.e("TAGTAG", "updateMessageList $messageList")
-    }
-
-    init {
-        addView(messageListView)
-        addView(connectionStateView)
-        addView(messagePanel)
     }
 
     private fun onSendButtonClicked() {

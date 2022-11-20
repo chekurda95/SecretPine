@@ -1,6 +1,7 @@
 package com.chekurda.secret_pine.main_screen.presentation
 
 import android.Manifest
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -9,10 +10,15 @@ import android.os.Handler
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.animation.DecelerateInterpolator
 import android.widget.Button
 import android.widget.Toast
+import androidx.core.animation.doOnEnd
+import androidx.core.view.children
+import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
 import com.chekurda.common.base_fragment.BasePresenterFragment
+import com.chekurda.design.custom_view_tools.utils.dp
 import com.chekurda.secret_pine.main_screen.R
 import com.chekurda.secret_pine.main_screen.contact.MainScreenFragmentFactory
 import com.chekurda.secret_pine.main_screen.data.Message
@@ -21,6 +27,7 @@ import com.chekurda.secret_pine.main_screen.presentation.views.pine.PineScreenVi
 import com.chekurda.secret_pine.main_screen.presentation.views.user.UserScreenView
 import com.chekurda.secret_pine.main_screen.utils.PermissionsHelper
 import com.chekurda.secret_pine.main_screen.utils.RecordingDeviceHelper
+import kotlin.math.roundToInt
 
 /**
  * Фрагмент главного экрана.
@@ -67,24 +74,18 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
 
     private fun onPineModeSelected() {
         mainScreenView?.apply {
-            removeAllViews()
-            userModeButton = null
-            pineModeButton = null
             pineScreenView = PineScreenView(context)
-            addView(pineScreenView, MATCH_PARENT, MATCH_PARENT)
+            showScreen(pineScreenView!!)
             presenter.onPineModeSelected()
         }
     }
 
     private fun onUserModeSelected() {
         mainScreenView?.apply {
-            removeAllViews()
-            userModeButton = null
-            pineModeButton = null
             userScreenView = UserScreenView(context).apply {
                 attachController(presenter)
             }
-            addView(userScreenView, MATCH_PARENT, MATCH_PARENT)
+            showScreen(userScreenView!!)
             presenter.onUserModeSelected()
         }
     }
@@ -124,8 +125,33 @@ internal class MainScreenFragment : BasePresenterFragment<MainScreenContract.Vie
         userScreenView = null
     }
 
-    override fun onDetach() {
-        super.onDetach()
+    private fun showScreen(view: View) {
+        mainScreenView?.apply {
+            addView(view, MATCH_PARENT, MATCH_PARENT)
+            view.translationZ = dp(20).toFloat()
+            ValueAnimator.ofFloat(0f, 1f).apply {
+                interpolator = DecelerateInterpolator()
+                duration = 250
+                var startPosition = 0
+                addUpdateListener {
+                    alpha = it.animatedFraction
+                    translationX = startPosition * (1f - animatedFraction)
+                }
+                doOnEnd {
+                    removeView(pineModeButton)
+                    removeView(userModeButton)
+                    view.translationZ = 0f
+                    pineModeButton = null
+                    userModeButton = null
+                }
+                doOnPreDraw {
+                    startPosition = ((mainScreenView?.width ?: 0) * 0.2f).roundToInt()
+                    resume()
+                }
+                start()
+                pause()
+            }
+        }
     }
 
     override fun provideHandler(): Handler = requireView().handler

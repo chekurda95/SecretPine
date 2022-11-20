@@ -5,8 +5,10 @@ import android.util.AttributeSet
 import android.view.Gravity
 import android.view.ViewGroup.LayoutParams.*
 import android.widget.FrameLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.updatePadding
 import com.chekurda.design.custom_view_tools.utils.dp
+import com.chekurda.secret_pine.main_screen.R
 import com.chekurda.secret_pine.main_screen.presentation.views.ConnectionStateView
 
 internal class PineScreenView @JvmOverloads constructor(
@@ -32,5 +34,6 @@ internal class PineScreenView @JvmOverloads constructor(
             gravity = Gravity.CENTER
         }
         addView(stateView, stateViewLp)
+        background = ContextCompat.getDrawable(context, R.drawable.main_screen_background)
     }
 }
